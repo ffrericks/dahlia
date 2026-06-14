@@ -145,6 +145,10 @@ export function listPlants(includeGone = false): Promise<Plant[]> {
   return apiFetch<Plant[]>(`/plants${includeGone ? '?include_gone=true' : ''}`)
 }
 
+export function searchPlants(q: string): Promise<Plant[]> {
+  return apiFetch<Plant[]>(`/plants/search?q=${encodeURIComponent(q)}`)
+}
+
 export function getPlant(id: number): Promise<PlantDetail> {
   return apiFetch<PlantDetail>(`/plants/${id}`)
 }

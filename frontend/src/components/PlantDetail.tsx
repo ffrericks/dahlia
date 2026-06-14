@@ -19,6 +19,7 @@ import AssignVarietyForm from './AssignVarietyForm'
 import DisposalActions from './DisposalActions'
 import Logbook from './Logbook'
 import PlantingForm from './PlantingForm'
+import QrLabel from './QrLabel'
 
 interface Props {
   plantId: number
@@ -399,6 +400,13 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {(detail.storage?.composite || detail.full_code) && (
+        <section className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+          <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">Label</h3>
+          <QrLabel code={detail.storage?.composite ?? detail.full_code!} />
         </section>
       )}
 

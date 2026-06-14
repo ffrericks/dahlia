@@ -42,8 +42,8 @@ export function deleteVariety(id: number): Promise<void> {
   return apiFetch<void>(`/varieties/${id}`, { method: 'DELETE' })
 }
 
-export function fetchWikipediaExtract(url: string): Promise<{ extract: string }> {
-  return apiFetch<{ extract: string }>('/varieties/wikipedia-extract', {
+export function fetchDescription(url: string): Promise<{ extract: string }> {
+  return apiFetch<{ extract: string }>('/varieties/description-extract', {
     method: 'POST',
     body: JSON.stringify({ url }),
   })

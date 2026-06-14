@@ -6,13 +6,13 @@ from sqlmodel import Session, select
 from ..db import get_session
 from ..models import Plant, Variety
 from ..schemas.variety import (
+    DescriptionRequest,
     VarietyCreate,
     VarietyRead,
     VarietyUpdate,
-    WikipediaRequest,
 )
+from ..services.descriptions import extract_description
 from ..services.photos import variety_image_thumb
-from ..services.wikipedia import fetch_first_paragraph
 
 router = APIRouter(prefix="/varieties", tags=["varieties"])
 
@@ -38,15 +38,15 @@ def list_varieties(session: Session = Depends(get_session)) -> list[dict]:
     return [serialize_variety(session, v) for v in varieties]
 
 
-@router.post("/wikipedia-extract")
-def wikipedia_extract(payload: WikipediaRequest) -> dict[str, str]:
-    """Fetch a Wikipedia article's first paragraph so the UI can prefill the description."""
+@router.post("/description-extract")
+def description_extract(payload: DescriptionRequest) -> dict[str, str]:
+    """Fetch a description from a supported page so the UI can prefill the field."""
     try:
-        return {"extract": fetch_first_paragraph(payload.url)}
+        return {"extract": extract_description(payload.url)}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Kon Wikipedia niet bereiken: {exc}")
+        raise HTTPException(status_code=502, detail=f"Kon de pagina niet ophalen: {exc}")
 
 
 @router.post("", response_model=VarietyRead, status_code=201)

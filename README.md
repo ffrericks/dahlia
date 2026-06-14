@@ -14,6 +14,12 @@ docker compose up --build
 
 Then open <http://localhost:8000>. Data is stored in `./data`.
 
+## Deploy to a server (Proxmox LXC or via SSH)
+
+See **[docs/DEPLOY.md](docs/DEPLOY.md)** for step-by-step install on a Proxmox
+container — both a native `systemd` install (`deploy/install.sh`, recommended for an
+LXC) and a Docker install.
+
 ## Local development
 
 Run the backend and frontend separately for hot-reload. The Vite dev server proxies `/api` to the backend.

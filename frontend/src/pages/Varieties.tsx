@@ -124,7 +124,7 @@ export default function Varieties() {
                   rel="noreferrer"
                   className="mt-1 inline-block text-sm text-emerald-700 hover:underline"
                 >
-                  Wikipedia ↗
+                  Bron ↗
                 </a>
               )}
             </div>

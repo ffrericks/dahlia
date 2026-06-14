@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Variety, VarietyInput } from '../api/varieties'
-import { fetchWikipediaExtract } from '../api/varieties'
+import { fetchDescription } from '../api/varieties'
 
 interface Props {
   // When editing, the existing variety; when adding, undefined.
@@ -19,11 +19,11 @@ export default function VarietyForm({ existing, onSave, onCancel }: Props) {
   const [importing, setImporting] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  async function importFromWikipedia() {
+  async function importDescription() {
     setError(null)
     setImporting(true)
     try {
-      const { extract } = await fetchWikipediaExtract(wikipediaUrl)
+      const { extract } = await fetchDescription(wikipediaUrl)
       setDescription(extract)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -85,7 +85,7 @@ export default function VarietyForm({ existing, onSave, onCancel }: Props) {
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-stone-600">Wikipedia-link (optioneel)</span>
+        <span className="text-sm font-medium text-stone-600">Link naar omschrijving (optioneel)</span>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             value={wikipediaUrl}
@@ -96,13 +96,16 @@ export default function VarietyForm({ existing, onSave, onCancel }: Props) {
           />
           <button
             type="button"
-            onClick={importFromWikipedia}
+            onClick={importDescription}
             disabled={!wikipediaUrl.trim() || importing}
             className="rounded-lg border border-emerald-600 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-40"
           >
             {importing ? 'Ophalen…' : 'Haal omschrijving op'}
           </button>
         </div>
+        <span className="text-xs text-stone-400">
+          Werkt met Wikipedia, Studio May &amp; June en de Nederlandse Dahlia Vereniging.
+        </span>
       </label>
 
       <label className="flex flex-col gap-1">

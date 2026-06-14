@@ -1,0 +1,18 @@
+[Unit]
+Description=Dahlia tool (self-hosted dahlia tracker)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__REPO_DIR__/backend
+# All data (SQLite DB + photos) lives here — back up this folder.
+Environment=DATA_DIR=__DATA_DIR__
+# Built frontend (copied here by install.sh).
+Environment=STATIC_DIR=__REPO_DIR__/backend/app/static
+# Bind 0.0.0.0 so other devices on your home network (e.g. your phone) can reach it.
+ExecStart=__REPO_DIR__/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port __PORT__
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -175,6 +175,34 @@ def inventory_summary(session: Session = Depends(get_session)) -> dict:
     return {"total": len(plants), "by_state": dict(by_state)}
 
 
+@router.get("/search")
+def search_plants(q: str, session: Session = Depends(get_session)) -> list[dict]:
+    """Find plants by code (BUM01000), storage code (BUM01000D0126) or nickname.
+
+    Matches across all plants (incl. discarded/given-away), so an old label scans fine.
+    """
+    needle = q.strip().upper().replace(" ", "")
+    if not needle:
+        return []
+
+    results = []
+    for plant in session.exec(select(Plant)).all():
+        data = serialize_plant(session, plant)
+        full = data["full_code"] or ""
+        composite = (data["storage"]["composite"].upper() if data["storage"] else "")
+        nickname = (plant.nickname or "").upper()
+
+        # A scanned/typed value may be the bare code, or carry a storage/location suffix.
+        code_match = full and (needle in full or full in needle)
+        storage_match = composite and needle in composite
+        nickname_match = nickname and needle in nickname
+        if code_match or storage_match or nickname_match:
+            results.append(data)
+
+    results.sort(key=lambda d: d["full_code"] or d["label"])
+    return results
+
+
 @router.post("", status_code=201)
 def create_plant(data: PlantCreate, session: Session = Depends(get_session)) -> dict:
     try:

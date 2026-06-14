@@ -58,5 +58,5 @@ class VarietyRead(BaseModel):
     image_thumbnail: str | None = None
 
 
-class WikipediaRequest(BaseModel):
+class DescriptionRequest(BaseModel):
     url: str
