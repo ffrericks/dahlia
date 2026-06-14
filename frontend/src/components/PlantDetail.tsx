@@ -191,6 +191,11 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
           <p className="text-sm text-stone-400">Niet geplant (in opslag).</p>
         )}
 
+        <p className="text-sm text-stone-600">
+          🌿 Laatst bemest:{' '}
+          {detail.last_fertilized ?? <span className="text-stone-400">nog niet</span>}
+        </p>
+
         {/* Only a stored plant that isn't currently planted can be planted out. */}
         {!detail.location &&
           (detail.state === 'stored' || detail.state === 'survived_winter') &&

@@ -208,6 +208,9 @@ function PlantRow({ plant, onClick }: { plant: Plant; onClick: () => void }) {
             {ORIGIN_LABELS[plant.origin]}
             {locator && <span className="font-mono text-stone-400"> · {locator}</span>}
           </p>
+          {plant.last_fertilized && (
+            <p className="text-xs text-stone-400">🌿 bemest {plant.last_fertilized}</p>
+          )}
         </div>
         <span className="shrink-0 rounded-full bg-stone-100 px-2 py-1 text-xs text-stone-600">
           {stateLabel(plant.state)}

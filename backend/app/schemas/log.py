@@ -9,6 +9,7 @@ class LogEntryCreate(BaseModel):
     bud_count: int | None = None
     flower_count: int | None = None
     harvested_count: int | None = None
+    fertilized: bool = False
     entry_date: date | None = None
 
     @field_validator("text")
@@ -32,6 +33,8 @@ class LogEntryCreate(BaseModel):
             v is not None
             for v in (self.height_cm, self.bud_count, self.flower_count, self.harvested_count)
         )
-        if not self.text and not has_metric:
-            raise ValueError("Een logboek-item heeft tekst of minstens één meting nodig.")
+        if not self.text and not has_metric and not self.fertilized:
+            raise ValueError(
+                "Een logboek-item heeft tekst, een meting of 'bemest' nodig."
+            )
         return self

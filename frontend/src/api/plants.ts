@@ -44,6 +44,7 @@ export interface Plant {
   thumbnail: string | null
   location: PlantLocation | null
   storage: PlantStorage | null
+  last_fertilized: string | null
 }
 
 export interface Photo {
@@ -63,6 +64,7 @@ export interface LogEntry {
   bud_count: number | null
   flower_count: number | null
   harvested_count: number | null
+  fertilized: boolean
 }
 
 export interface Disposal {
@@ -106,6 +108,7 @@ export interface LogInput {
   bud_count?: number | null
   flower_count?: number | null
   harvested_count?: number | null
+  fertilized?: boolean
   entry_date?: string | null
 }
 

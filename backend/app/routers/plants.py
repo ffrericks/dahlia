@@ -14,6 +14,7 @@ from ..schemas.winter import EyeStatusUpdate, LiftRequest, StorageAssign
 from ..services import disposal as disposal_service
 from ..services import plantings as planting_service
 from ..services import plants as plant_service
+from ..services.fertilization import last_fertilized
 from ..services.insights import plant_year_history
 from ..services.lineage import descendant_tally
 from ..services.locations import (
@@ -81,7 +82,12 @@ def serialize_plant(session: Session, plant: Plant) -> dict:
         "thumbnail": effective_thumbnail(session, plant),
         "location": location,
         "storage": _storage_info(session, plant, label),
+        "last_fertilized": _iso(last_fertilized(session, plant.id)),
     }
+
+
+def _iso(value) -> str | None:
+    return value.isoformat() if value else None
 
 
 def _storage_info(session: Session, plant: Plant, label: str) -> dict | None:
@@ -114,6 +120,7 @@ def serialize_log(log: LogEntry) -> dict:
         "bud_count": log.bud_count,
         "flower_count": log.flower_count,
         "harvested_count": log.harvested_count,
+        "fertilized": log.fertilized,
     }
 
 
@@ -452,6 +459,7 @@ def add_log(
         bud_count=data.bud_count,
         flower_count=data.flower_count,
         harvested_count=data.harvested_count,
+        fertilized=data.fertilized,
     )
     session.add(log)
     session.commit()

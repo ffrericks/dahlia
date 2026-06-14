@@ -12,6 +12,26 @@ engine = create_engine(
 )
 
 
+# Columns added to existing tables after their first release. SQLite can ADD COLUMN
+# in place, so existing databases upgrade without losing data.
+_ADDED_COLUMNS = {
+    "logentry": [("fertilized", "BOOLEAN NOT NULL DEFAULT 0")],
+}
+
+
+def _ensure_columns() -> None:
+    """Add any missing columns to existing tables (additive, non-destructive)."""
+    with engine.begin() as conn:
+        for table, columns in _ADDED_COLUMNS.items():
+            info = list(conn.exec_driver_sql(f"PRAGMA table_info({table})"))
+            if not info:
+                continue  # fresh DB: create_all already made the table with all columns
+            existing = {row[1] for row in info}
+            for name, ddl in columns:
+                if name not in existing:
+                    conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+
+
 def init_db() -> None:
     """Create the data folders and any tables defined by SQLModel models."""
     settings.data_dir.mkdir(parents=True, exist_ok=True)
@@ -20,6 +40,7 @@ def init_db() -> None:
     from . import models  # noqa: F401
 
     SQLModel.metadata.create_all(engine)
+    _ensure_columns()
 
 
 def get_session() -> Iterator[Session]:

@@ -14,3 +14,6 @@ class LogEntry(SQLModel, table=True):
     bud_count: int | None = Field(default=None)
     flower_count: int | None = Field(default=None)
     harvested_count: int | None = Field(default=None)
+    # Fertilized on this date. Plants in the same spot are fed together, so this
+    # entry counts for every plant standing in that location on the same date.
+    fertilized: bool = Field(default=False)

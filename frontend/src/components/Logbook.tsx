@@ -16,6 +16,7 @@ export default function Logbook({ plantId, logs, onChanged }: Props) {
   const [buds, setBuds] = useState('')
   const [flowers, setFlowers] = useState('')
   const [harvested, setHarvested] = useState('')
+  const [fertilized, setFertilized] = useState(false)
   const [entryDate, setEntryDate] = useState(todayISO())
   const [error, setError] = useState<string | null>(null)
 
@@ -31,6 +32,7 @@ export default function Logbook({ plantId, logs, onChanged }: Props) {
         bud_count: num(buds),
         flower_count: num(flowers),
         harvested_count: num(harvested),
+        fertilized,
         entry_date: entryDate,
       })
       setText('')
@@ -38,6 +40,7 @@ export default function Logbook({ plantId, logs, onChanged }: Props) {
       setBuds('')
       setFlowers('')
       setHarvested('')
+      setFertilized(false)
       setEntryDate(todayISO())
       setOpen(false)
       onChanged()
@@ -78,6 +81,14 @@ export default function Logbook({ plantId, logs, onChanged }: Props) {
             <Field label="Bloemen" value={flowers} onChange={setFlowers} />
             <Field label="Geoogst" value={harvested} onChange={setHarvested} />
           </div>
+          <label className="flex items-center gap-2 text-sm text-stone-700">
+            <input
+              type="checkbox"
+              checked={fertilized}
+              onChange={(e) => setFertilized(e.target.checked)}
+            />
+            Bemest (geldt voor alle planten op dezelfde plek)
+          </label>
           <label className="flex flex-col gap-1 text-xs text-stone-500">
             Datum
             <input
@@ -105,6 +116,11 @@ export default function Logbook({ plantId, logs, onChanged }: Props) {
             <li key={log.id} className="flex items-start justify-between gap-3 border-b border-stone-100 pb-2 last:border-0">
               <div className="min-w-0">
                 <p className="text-xs text-stone-400">{log.entry_date}</p>
+                {log.fertilized && (
+                  <span className="my-0.5 inline-block rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-700">
+                    🌿 Bemest
+                  </span>
+                )}
                 {log.text && <p className="text-sm">{log.text}</p>}
                 <p className="text-sm text-stone-500">{metrics(log)}</p>
               </div>
