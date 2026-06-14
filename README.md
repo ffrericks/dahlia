@@ -1,6 +1,7 @@
 # Dahlia Tool
 
 Self-hosted web app for caring for and propagating dahlias. See [ARCHITECT.md](ARCHITECT.md) for the full design.
+This version is in Dutch. 
 
 One Docker container serves both the API (FastAPI + SQLite) and the web UI (React). All data — the SQLite database and photos — lives in a single `data/` folder, so a backup is one folder copy.
 
