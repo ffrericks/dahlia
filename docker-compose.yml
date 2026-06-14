@@ -1,0 +1,13 @@
+services:
+  dahlia:
+    # Build locally from source...
+    build: .
+    # ...or pull the published image instead (replace OWNER/REPO):
+    # image: ghcr.io/OWNER/REPO:latest
+    container_name: dahlia
+    ports:
+      - "8000:8000"
+    volumes:
+      # All data (SQLite DB + photos) lives here. Back up by copying ./data.
+      - ./data:/data
+    restart: unless-stopped

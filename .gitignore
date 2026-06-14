@@ -1,0 +1,25 @@
+# Data volume (SQLite DB + photos) — never commit, in any directory
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# TypeScript build artifacts (emitted by `tsc -b`)
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# Env / editor
+.env
+.DS_Store
+.vscode/
+.idea/
