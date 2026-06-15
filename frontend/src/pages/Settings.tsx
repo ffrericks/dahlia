@@ -44,8 +44,9 @@ export default function Settings() {
   if (loading) return <p className="text-stone-500">Laden…</p>
 
   return (
-    <form onSubmit={save} className="flex flex-col gap-5">
-      <h2 className="text-lg font-semibold">Instellingen</h2>
+    <div className="flex flex-col gap-8">
+      <form onSubmit={save} className="flex flex-col gap-5">
+        <h2 className="text-lg font-semibold">Instellingen</h2>
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-stone-600">Adres van de tool (URL)</span>
@@ -110,6 +111,50 @@ export default function Settings() {
       >
         {saving ? 'Opslaan…' : 'Opslaan'}
       </button>
-    </form>
+      </form>
+
+      <section className="flex flex-col gap-2 border-t border-stone-200 pt-6">
+        <h2 className="text-lg font-semibold">API &amp; automatisering</h2>
+        <p className="text-sm text-stone-500">
+          Een alleen-lezen API om gegevens uit te lezen, bijvoorbeeld in n8n voor een mailtje
+          "tijd om te bemesten".
+        </p>
+        {toolUrl.trim() ? (
+          <ul className="flex flex-col gap-1 text-sm">
+            <li>
+              Documentatie:{' '}
+              <a
+                href={`${toolUrl.trim().replace(/\/$/, '')}/docs`}
+                target="_blank"
+                rel="noreferrer"
+                className="break-all text-emerald-700 underline"
+              >
+                {toolUrl.trim().replace(/\/$/, '')}/docs
+              </a>
+            </li>
+            <li>
+              Plant-overzicht (voor n8n):{' '}
+              <a
+                href={`${toolUrl.trim().replace(/\/$/, '')}/api/automation/plants`}
+                target="_blank"
+                rel="noreferrer"
+                className="break-all text-emerald-700 underline"
+              >
+                {toolUrl.trim().replace(/\/$/, '')}/api/automation/plants
+              </a>
+            </li>
+          </ul>
+        ) : (
+          <p className="text-sm text-stone-400">
+            Vul hierboven het adres van de tool in om de API-adressen te zien.
+          </p>
+        )}
+        <p className="text-xs text-stone-400">
+          Per plant krijg je onder andere: laatst bemest + dagen geleden, hoogste hoogte, aantal
+          bloemen, totaal geoogst, en datum + tekst van het laatste logboek-item. Alleen lezen
+          (GET), zonder wachtwoord — houd het op je eigen netwerk.
+        </p>
+      </section>
+    </div>
   )
 }

@@ -135,12 +135,15 @@ export default function Varieties() {
               >
                 Bewerken
               </button>
-              <button
-                onClick={() => remove(variety)}
-                className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
-              >
-                Verwijderen
-              </button>
+              {/* Keep varieties for history; only allow removing one that never had a plant. */}
+              {variety.plant_count === 0 && (
+                <button
+                  onClick={() => remove(variety)}
+                  className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  Verwijderen
+                </button>
+              )}
             </div>
           </li>
         ))}

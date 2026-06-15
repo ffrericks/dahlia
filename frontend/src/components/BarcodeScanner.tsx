@@ -5,9 +5,13 @@ interface Props {
   onClose: () => void
 }
 
-// Whether this browser can decode barcodes from the camera (Chrome/Android: yes; iOS Safari: no).
+// In-app scanning needs the Barcode API + camera, which browsers only allow in a
+// secure context (https or localhost) — not over plain http on a LAN IP.
 export const scannerSupported =
-  typeof window !== 'undefined' && 'BarcodeDetector' in window
+  typeof window !== 'undefined' &&
+  'BarcodeDetector' in window &&
+  window.isSecureContext &&
+  !!navigator.mediaDevices
 
 function makeDetector(): BarcodeDetector {
   // Prefer QR; fall back to all formats if the browser rejects the option.

@@ -148,6 +148,8 @@ export default function Plants({ initialPlantId, initialQuery }: Props) {
 
       <p className="text-xs text-stone-400">
         Tip: scan de QR op een label met je telefooncamera om de plant direct te openen.
+        {!scannerSupported &&
+          ' De ingebouwde 📷-scanknop werkt alleen via https of op localhost.'}
       </p>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
