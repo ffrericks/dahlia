@@ -6,18 +6,27 @@ import CareTips from '../components/CareTips'
 import PlantDetail from '../components/PlantDetail'
 import PlantForm from '../components/PlantForm'
 import { ORIGIN_LABELS, stateLabel } from '../labels'
+import { parseScan } from '../scan'
 
 type View = { mode: 'list' } | { mode: 'new' } | { mode: 'detail'; id: number }
 
-export default function Plants() {
+interface Props {
+  initialPlantId?: number | null
+  initialQuery?: string | null
+}
+
+export default function Plants({ initialPlantId, initialQuery }: Props) {
   const [plants, setPlants] = useState<Plant[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [view, setView] = useState<View>({ mode: 'list' })
+  // Deep link (from a scanned QR) can open a plant or prefill the search.
+  const [view, setView] = useState<View>(
+    initialPlantId ? { mode: 'detail', id: initialPlantId } : { mode: 'list' },
+  )
   const [showGone, setShowGone] = useState(false)
 
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery ?? '')
   const [results, setResults] = useState<Plant[]>([])
   const [scanning, setScanning] = useState(false)
 
@@ -124,12 +133,22 @@ export default function Plants() {
       {scanning && (
         <BarcodeScanner
           onScan={(value) => {
-            setQuery(value)
             setScanning(false)
+            // A QR may be a deep-link URL (open the plant) or a bare code (search).
+            const parsed = parseScan(value)
+            if (parsed.plantId) {
+              setView({ mode: 'detail', id: parsed.plantId })
+            } else if (parsed.query) {
+              setQuery(parsed.query)
+            }
           }}
           onClose={() => setScanning(false)}
         />
       )}
+
+      <p className="text-xs text-stone-400">
+        Tip: scan de QR op een label met je telefooncamera om de plant direct te openen.
+      </p>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

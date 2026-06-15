@@ -4,6 +4,7 @@ from datetime import date
 from sqlmodel import Session, select
 
 from ..models import LogEntry, Planting
+from .settings import get_settings
 
 
 def _location_on(plantings_by_plant: dict[int, list[Planting]], plant_id: int, when: date):
@@ -29,6 +30,9 @@ def last_fertilized(session: Session, plant_id: int) -> date | None:
     if not fertilized_logs:
         return None
 
+    # When the bak-sharing setting is off, only the plant's own feedings count.
+    share_across_bak = get_settings(session).auto_fertilize_bak
+
     plantings_by_plant: dict[int, list[Planting]] = defaultdict(list)
     for planting in session.exec(select(Planting)).all():
         plantings_by_plant[planting.plant_id].append(planting)
@@ -37,6 +41,8 @@ def last_fertilized(session: Session, plant_id: int) -> date | None:
     for log in fertilized_logs:
         if log.plant_id == plant_id:
             applies = True
+        elif not share_across_bak:
+            applies = False
         else:
             log_location = _location_on(plantings_by_plant, log.plant_id, log.entry_date)
             applies = (

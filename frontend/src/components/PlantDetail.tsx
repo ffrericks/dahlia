@@ -13,6 +13,7 @@ import {
   updatePlant,
   uploadPhoto,
 } from '../api/plants'
+import { getSettings } from '../api/settings'
 import { todayISO } from '../dates'
 import { EYE_STATUS_LABELS, ORIGIN_LABELS, stateLabel } from '../labels'
 import AssignVarietyForm from './AssignVarietyForm'
@@ -35,7 +36,15 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
   const [planting, setPlanting] = useState(false)
   const [boxNumber, setBoxNumber] = useState('')
   const [liftDate, setLiftDate] = useState(todayISO())
+  const [toolUrl, setToolUrl] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+
+  // Tool URL drives the QR deep-link (so a phone camera opens the plant directly).
+  useEffect(() => {
+    getSettings()
+      .then((s) => setToolUrl(s.tool_url))
+      .catch(() => setToolUrl(null))
+  }, [])
 
   // Refresh this view and tell the parent list to refresh too.
   async function refreshAll() {
@@ -411,7 +420,24 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
       {(detail.storage?.composite || detail.full_code) && (
         <section className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
           <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">Label</h3>
-          <QrLabel code={detail.storage?.composite ?? detail.full_code!} />
+          <QrLabel
+            value={
+              toolUrl
+                ? `${toolUrl}/?plant=${detail.id}`
+                : (detail.storage?.composite ?? detail.full_code!)
+            }
+            caption={detail.storage?.composite ?? detail.full_code!}
+          />
+          {toolUrl ? (
+            <p className="text-center text-xs text-stone-400">
+              Scan met je telefooncamera om deze plant te openen.
+            </p>
+          ) : (
+            <p className="text-center text-xs text-stone-400">
+              Stel het adres van de tool in (Instellingen) zodat de QR-code de plant rechtstreeks
+              opent.
+            </p>
+          )}
         </section>
       )}
 

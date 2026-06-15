@@ -1,12 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Insights from './pages/Insights'
 import Locations from './pages/Locations'
 import Plants from './pages/Plants'
+import Settings from './pages/Settings'
 import Storage from './pages/Storage'
 import Tree from './pages/Tree'
 import Varieties from './pages/Varieties'
 
-type Tab = 'plants' | 'varieties' | 'locations' | 'storage' | 'tree' | 'insights'
+type Tab =
+  | 'plants'
+  | 'varieties'
+  | 'locations'
+  | 'storage'
+  | 'tree'
+  | 'insights'
+  | 'settings'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'plants', label: 'Planten' },
@@ -15,10 +23,29 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'storage', label: 'Opslag' },
   { id: 'tree', label: 'Stamboom' },
   { id: 'insights', label: 'Beste plek' },
+  { id: 'settings', label: 'Instellingen' },
 ]
+
+function readDeepLink(): { plantId: number | null; query: string | null } {
+  const params = new URLSearchParams(window.location.search)
+  const plant = params.get('plant')
+  return {
+    plantId: plant && /^\d+$/.test(plant) ? Number(plant) : null,
+    query: params.get('q'),
+  }
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('plants')
+  // A QR scanned with the phone camera opens the app with ?plant= or ?q= — handle it once.
+  const [deepLink, setDeepLink] = useState(readDeepLink)
+
+  useEffect(() => {
+    if (deepLink.plantId || deepLink.query) {
+      window.history.replaceState({}, '', window.location.pathname)
+      setDeepLink({ plantId: null, query: null }) // consume, so it doesn't reopen later
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800">
@@ -44,12 +71,15 @@ export default function App() {
           ))}
         </nav>
 
-        {tab === 'plants' && <Plants />}
+        {tab === 'plants' && (
+          <Plants initialPlantId={deepLink.plantId} initialQuery={deepLink.query} />
+        )}
         {tab === 'varieties' && <Varieties />}
         {tab === 'locations' && <Locations />}
         {tab === 'storage' && <Storage />}
         {tab === 'tree' && <Tree />}
         {tab === 'insights' && <Insights />}
+        {tab === 'settings' && <Settings />}
       </main>
     </div>
   )

@@ -9,20 +9,29 @@ interface Props {
 export const scannerSupported =
   typeof window !== 'undefined' && 'BarcodeDetector' in window
 
+function makeDetector(): BarcodeDetector {
+  // Prefer QR; fall back to all formats if the browser rejects the option.
+  try {
+    return new window.BarcodeDetector!({ formats: ['qr_code'] })
+  } catch {
+    return new window.BarcodeDetector!()
+  }
+}
+
 export default function BarcodeScanner({ onScan, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!scannerSupported) {
-      setError('Scannen wordt niet ondersteund in deze browser. Typ de code in.')
+      setError('Scannen in de app kan niet in deze browser. Gebruik de camera-app van je telefoon.')
       return
     }
 
     let stream: MediaStream | null = null
     let timer: number | undefined
     let stopped = false
-    const detector = new window.BarcodeDetector!()
+    const detector = makeDetector()
 
     async function start() {
       try {
@@ -34,19 +43,21 @@ export default function BarcodeScanner({ onScan, onClose }: Props) {
         video.srcObject = stream
         await video.play()
 
-        // Poll a few times a second until a code is found.
+        // Poll a few times a second until a code is found, then stop immediately.
         timer = window.setInterval(async () => {
           try {
             const codes = await detector.detect(video)
-            if (codes.length > 0) {
+            if (codes.length > 0 && !stopped) {
+              stopped = true
+              if (timer) window.clearInterval(timer)
               onScan(codes[0].rawValue)
             }
           } catch {
             // transient decode errors are fine; keep trying
           }
-        }, 300)
+        }, 250)
       } catch {
-        setError('Geen toegang tot de camera.')
+        setError('Geen toegang tot de camera. Geef toestemming, of gebruik de camera-app.')
       }
     }
     start()
@@ -54,7 +65,7 @@ export default function BarcodeScanner({ onScan, onClose }: Props) {
     return () => {
       stopped = true
       if (timer) window.clearInterval(timer)
-      stream?.getTracks().forEach((t) => t.stop())
+      stream?.getTracks().forEach((track) => track.stop())
     }
   }, [onScan])
 
@@ -71,9 +82,20 @@ export default function BarcodeScanner({ onScan, onClose }: Props) {
       {error ? (
         <p className="text-sm text-red-600">{error}</p>
       ) : (
-        <video ref={videoRef} className="w-full rounded-lg bg-black" muted playsInline />
+        <>
+          <div className="relative mx-auto w-full max-w-sm">
+            <video
+              ref={videoRef}
+              className="aspect-square w-full rounded-lg bg-black object-cover"
+              muted
+              playsInline
+            />
+            {/* viewfinder frame */}
+            <div className="pointer-events-none absolute inset-6 rounded-lg border-2 border-white/70" />
+          </div>
+          <p className="text-center text-xs text-stone-400">Houd de QR-code voor de camera.</p>
+        </>
       )}
-      <p className="text-xs text-stone-400">Houd de QR-code voor de camera.</p>
     </div>
   )
 }

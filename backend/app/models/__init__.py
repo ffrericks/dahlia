@@ -1,5 +1,6 @@
 """SQLModel entities. Importing them here registers their tables for create_all()."""
 
+from .app_settings import AppSettings
 from .disposal import Disposal
 from .location import Location
 from .log_entry import LogEntry
@@ -18,4 +19,5 @@ __all__ = [
     "StorageBox",
     "LogEntry",
     "Disposal",
+    "AppSettings",
 ]

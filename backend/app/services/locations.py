@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
 
 from ..models import Location, Planting
+from .settings import get_settings
 
 
 def location_code(location: Location) -> str:
@@ -34,10 +35,14 @@ def next_number(session: Session, kind: str) -> int:
 def create_location(session: Session, kind: str, name: str | None) -> Location:
     if kind not in ("garden", "container"):
         raise ValueError("Soort locatie moet 'garden' of 'container' zijn.")
+    clean_name = (name.strip() if name else None) or None
+    # Fall back to the configured default name for unnamed garden spots.
+    if kind == "garden" and clean_name is None:
+        clean_name = get_settings(session).default_garden_name
     location = Location(
         kind=kind,
         number=next_number(session, kind),
-        name=(name.strip() if name else None) or None,
+        name=clean_name,
     )
     session.add(location)
     session.flush()  # assign an id without committing yet
