@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getSettings, updateSettings } from '../api/settings'
+import BackupSettings from '../components/BackupSettings'
 
 export default function Settings() {
   const [toolUrl, setToolUrl] = useState('')
@@ -155,6 +156,8 @@ export default function Settings() {
           (GET), zonder wachtwoord — houd het op je eigen netwerk.
         </p>
       </section>
+
+      <BackupSettings />
     </div>
   )
 }
