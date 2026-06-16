@@ -7,7 +7,9 @@ from ..models import LogEntry, Planting
 from .settings import get_settings
 
 
-def _location_on(plantings_by_plant: dict[int, list[Planting]], plant_id: int, when: date):
+def _location_on(
+    plantings_by_plant: dict[int, list[Planting]], plant_id: int, when: date
+):
     """Which location a plant stood in on a given date (None if not planted then)."""
     for planting in plantings_by_plant.get(plant_id, []):
         end = planting.lifted_on or date.max
@@ -44,10 +46,13 @@ def last_fertilized(session: Session, plant_id: int) -> date | None:
         elif not share_across_bak:
             applies = False
         else:
-            log_location = _location_on(plantings_by_plant, log.plant_id, log.entry_date)
+            log_location = _location_on(
+                plantings_by_plant, log.plant_id, log.entry_date
+            )
             applies = (
                 log_location is not None
-                and _location_on(plantings_by_plant, plant_id, log.entry_date) == log_location
+                and _location_on(plantings_by_plant, plant_id, log.entry_date)
+                == log_location
             )
         if applies and (best is None or log.entry_date > best):
             best = log.entry_date

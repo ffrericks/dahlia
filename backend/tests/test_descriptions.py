@@ -38,7 +38,9 @@ GENERIC_HTML = """
 
 
 def test_dahliavereniging_combines_intro_and_labeled_sections():
-    text = _extract_dahliavereniging(BeautifulSoup(DAHLIAVERENIGING_HTML, "html.parser"))
+    text = _extract_dahliavereniging(
+        BeautifulSoup(DAHLIAVERENIGING_HTML, "html.parser")
+    )
     assert "Bijzondere collerette-dahlia" in text
     assert "Kleurbeschrijving: Dieproze" in text
     assert "Bijzondere kenmerken: Collerette-vorm" in text

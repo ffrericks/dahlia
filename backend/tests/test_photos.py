@@ -68,7 +68,10 @@ def test_set_profile_and_delete(client):
     assert profiles[first["id"]] is False
 
     # Deleting the profile photo promotes the remaining one.
-    assert client.delete(f"/api/plants/{plant['id']}/photos/{second['id']}").status_code == 204
+    assert (
+        client.delete(f"/api/plants/{plant['id']}/photos/{second['id']}").status_code
+        == 204
+    )
     detail = client.get(f"/api/plants/{plant['id']}").json()
     assert len(detail["photos"]) == 1
     assert detail["photos"][0]["is_profile"] is True

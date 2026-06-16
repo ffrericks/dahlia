@@ -16,7 +16,9 @@ router = APIRouter(prefix="/locations", tags=["locations"])
 
 @router.get("")
 def list_locations(session: Session = Depends(get_session)) -> list[dict]:
-    locations = session.exec(select(Location).order_by(Location.kind, Location.number)).all()
+    locations = session.exec(
+        select(Location).order_by(Location.kind, Location.number)
+    ).all()
     return [serialize_location(session, loc) for loc in locations]
 
 
@@ -75,7 +77,9 @@ def delete_location(location_id: int, session: Session = Depends(get_session)) -
     if location is None:
         raise HTTPException(status_code=404, detail="Locatie niet gevonden.")
     # Keep planting history: a location that has ever been used stays in the system.
-    if session.exec(select(Planting.id).where(Planting.location_id == location_id)).first():
+    if session.exec(
+        select(Planting.id).where(Planting.location_id == location_id)
+    ).first():
         raise HTTPException(
             status_code=409,
             detail="Deze locatie is gebruikt en blijft bestaan (kan niet verwijderd worden).",

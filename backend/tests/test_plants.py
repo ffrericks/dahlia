@@ -15,7 +15,9 @@ def test_purchased_first_plant_is_01000(client):
 
 def test_second_independent_plant_starts_new_stam(client):
     variety = make_variety(client)
-    client.post("/api/plants", json={"origin": "purchased", "variety_id": variety["id"]})
+    client.post(
+        "/api/plants", json={"origin": "purchased", "variety_id": variety["id"]}
+    )
     second = client.post(
         "/api/plants", json={"origin": "gifted", "variety_id": variety["id"]}
     ).json()
@@ -67,7 +69,11 @@ def test_seedling_creates_new_variety_with_own_01000(client):
 def test_purchased_can_create_new_variety_inline(client):
     plant = client.post(
         "/api/plants",
-        json={"origin": "purchased", "new_variety_code": "roo", "new_variety_name": "Rode"},
+        json={
+            "origin": "purchased",
+            "new_variety_code": "roo",
+            "new_variety_name": "Rode",
+        },
     ).json()
     assert plant["full_code"] == "ROO01000"
 
@@ -118,5 +124,7 @@ def test_cannot_delete_plant_with_descendants(client):
 
 def test_cannot_delete_variety_with_plants(client):
     variety = make_variety(client)
-    client.post("/api/plants", json={"origin": "purchased", "variety_id": variety["id"]})
+    client.post(
+        "/api/plants", json={"origin": "purchased", "variety_id": variety["id"]}
+    )
     assert client.delete(f"/api/varieties/{variety['id']}").status_code == 409

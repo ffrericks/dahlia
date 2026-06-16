@@ -9,7 +9,9 @@ from .numbering import next_ddd, next_stam
 _CODE_RE = re.compile(r"^[A-Z]{3}$")
 
 
-def _create_variety_inline(session: Session, code: str | None, name: str | None) -> Variety:
+def _create_variety_inline(
+    session: Session, code: str | None, name: str | None
+) -> Variety:
     """Create the new variety a seedling or new-variety purchase belongs to."""
     if not code:
         raise ValueError("Een nieuwe soort heeft een code nodig.")
@@ -48,7 +50,9 @@ def create_plant(session: Session, data: PlantCreate) -> Plant:
         if parent is None:
             raise ValueError("Moederplant niet gevonden.")
         # A seedling becomes a brand-new variety; it is plant 01000 there.
-        variety = _create_variety_inline(session, data.new_variety_code, data.new_variety_name)
+        variety = _create_variety_inline(
+            session, data.new_variety_code, data.new_variety_name
+        )
         variety_id = variety.id
         ss, ddd = 1, 0
         parent_id = parent.id

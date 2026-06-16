@@ -1,5 +1,7 @@
 def test_create_and_list(client):
-    created = client.post("/api/varieties", json={"code": "wit", "name": "Witte Dahlia"})
+    created = client.post(
+        "/api/varieties", json={"code": "wit", "name": "Witte Dahlia"}
+    )
     assert created.status_code == 201
     body = created.json()
     assert body["code"] == "WIT"  # normalized to uppercase
@@ -20,7 +22,9 @@ def test_invalid_code_is_rejected(client):
 
 def test_duplicate_code_conflicts(client):
     client.post("/api/varieties", json={"code": "ROO", "name": "Rode"})
-    duplicate = client.post("/api/varieties", json={"code": "roo", "name": "Andere rode"})
+    duplicate = client.post(
+        "/api/varieties", json={"code": "roo", "name": "Andere rode"}
+    )
     assert duplicate.status_code == 409
 
 

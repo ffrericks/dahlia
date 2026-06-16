@@ -46,7 +46,9 @@ class PlantCreate(BaseModel):
             return None
         value = value.strip()
         if not _CODE_RE.match(value):
-            raise ValueError("Code voor de nieuwe soort moet uit precies 3 letters bestaan.")
+            raise ValueError(
+                "Code voor de nieuwe soort moet uit precies 3 letters bestaan."
+            )
         return value.upper()
 
     @field_validator("nickname")
@@ -62,7 +64,9 @@ class PlantCreate(BaseModel):
         if self.origin in ("split", "seedling") and self.parent_plant_id is None:
             raise ValueError("Een afsplitsing of zaailing heeft een moederplant nodig.")
         if self.origin == "seedling" and self.new_variety_code is None:
-            raise ValueError("Een zaailing wordt een nieuwe soort en heeft een code nodig.")
+            raise ValueError(
+                "Een zaailing wordt een nieuwe soort en heeft een code nodig."
+            )
         if self.origin in ("purchased", "gifted"):
             if self.variety_id is None and self.new_variety_code is None:
                 raise ValueError(
@@ -86,13 +90,17 @@ class VarietyAssign(BaseModel):
             return None
         value = value.strip()
         if not _CODE_RE.match(value):
-            raise ValueError("Code voor de nieuwe soort moet uit precies 3 letters bestaan.")
+            raise ValueError(
+                "Code voor de nieuwe soort moet uit precies 3 letters bestaan."
+            )
         return value.upper()
 
     @model_validator(mode="after")
     def check(self):
         if self.variety_id is None and self.new_variety_code is None:
-            raise ValueError("Kies een bestaande soort of geef een code voor een nieuwe soort.")
+            raise ValueError(
+                "Kies een bestaande soort of geef een code voor een nieuwe soort."
+            )
         return self
 
 

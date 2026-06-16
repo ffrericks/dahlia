@@ -19,7 +19,9 @@ def test_search_is_case_insensitive_and_partial(client):
 
 def test_search_by_storage_code(client):
     v = _variety(client, "BUM")
-    p = client.post("/api/plants", json={"origin": "purchased", "variety_id": v["id"]}).json()
+    p = client.post(
+        "/api/plants", json={"origin": "purchased", "variety_id": v["id"]}
+    ).json()
     # lift and box it -> composite code BUM01000D0126
     client.post(f"/api/plants/{p['id']}/lift", json={})
     client.put(f"/api/plants/{p['id']}/storage", json={"number": 1, "year": 2026})
@@ -38,7 +40,9 @@ def test_search_by_nickname_finds_provisional(client):
 
 def test_search_finds_disposed_plant(client):
     v = _variety(client, "BUM")
-    p = client.post("/api/plants", json={"origin": "purchased", "variety_id": v["id"]}).json()
+    p = client.post(
+        "/api/plants", json={"origin": "purchased", "variety_id": v["id"]}
+    ).json()
     client.post(f"/api/plants/{p['id']}/dispose", json={"kind": "discarded"})
     # Still findable by an old label even though it's gone from the active list.
     assert len(client.get("/api/plants/search", params={"q": "BUM01000"}).json()) == 1

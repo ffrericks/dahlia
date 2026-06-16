@@ -11,7 +11,10 @@ router = APIRouter(prefix="/season", tags=["season"])
 
 def _brief(session: Session, plant) -> dict:
     variety = session.get(Variety, plant.variety_id)
-    return {"id": plant.id, "full_code": f"{variety.code}{format_number(plant.ss, plant.ddd)}"}
+    return {
+        "id": plant.id,
+        "full_code": f"{variety.code}{format_number(plant.ss, plant.ddd)}",
+    }
 
 
 @router.get("/status")

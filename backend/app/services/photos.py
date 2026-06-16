@@ -56,7 +56,9 @@ def profile_photo_of(session: Session, plant_id: int) -> Photo | None:
 def variety_image_thumb(session: Session, variety_id: int) -> str | None:
     """The variety's representative image: the profile photo of its lowest-numbered plant."""
     plants = session.exec(
-        select(Plant).where(Plant.variety_id == variety_id).order_by(Plant.ss, Plant.ddd)
+        select(Plant)
+        .where(Plant.variety_id == variety_id)
+        .order_by(Plant.ss, Plant.ddd)
     ).all()
     for plant in plants:
         photo = profile_photo_of(session, plant.id)

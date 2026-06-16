@@ -47,7 +47,9 @@ def automation_plants(
         heights = [log.height_cm for log in logs if log.height_cm is not None]
         buds = [log.bud_count for log in logs if log.bud_count is not None]
         flowers = [log.flower_count for log in logs if log.flower_count is not None]
-        harvested = [log.harvested_count for log in logs if log.harvested_count is not None]
+        harvested = [
+            log.harvested_count for log in logs if log.harvested_count is not None
+        ]
         latest = logs[0] if logs else None
 
         fertilized = last_fertilized(session, plant.id)
@@ -62,9 +64,13 @@ def automation_plants(
                 "variety_name": variety.name if variety else None,
                 "state": plant.state,
                 "location": location_code(location) if location else None,
-                "location_label": location_label(session, location) if location else None,
+                "location_label": location_label(session, location)
+                if location
+                else None,
                 "last_fertilized": fertilized.isoformat() if fertilized else None,
-                "days_since_fertilized": (today - fertilized).days if fertilized else None,
+                "days_since_fertilized": (today - fertilized).days
+                if fertilized
+                else None,
                 "height_max_cm": max(heights) if heights else None,
                 "buds_peak": max(buds) if buds else None,
                 "flowers_peak": max(flowers) if flowers else None,

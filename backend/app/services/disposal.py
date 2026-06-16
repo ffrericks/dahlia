@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from ..models import Disposal, LogEntry, Plant
 from .locations import current_planting
@@ -55,9 +55,11 @@ def dispose_plant(
 
 
 def mark_not_emerged(session: Session, plant_id: int) -> Plant:
-    """"Did not come up" — counts as discarded, with a logbook note."""
+    """ "Did not come up" — counts as discarded, with a logbook note."""
     plant = session.get(Plant, plant_id)
     if plant is None:
         raise ValueError("Plant niet gevonden.")
-    session.add(LogEntry(plant_id=plant_id, entry_date=date.today(), text="Niet opgekomen."))
+    session.add(
+        LogEntry(plant_id=plant_id, entry_date=date.today(), text="Niet opgekomen.")
+    )
     return dispose_plant(session, plant_id, kind="discarded", reason="Niet opgekomen")

@@ -45,7 +45,9 @@ app.include_router(backup.router, prefix="/api")
 
 # Serve uploaded photos from the data volume. check_dir=False because the folder is
 # created at startup (init_db), which runs after this module is imported.
-app.mount("/media", StaticFiles(directory=settings.photos_dir, check_dir=False), name="media")
+app.mount(
+    "/media", StaticFiles(directory=settings.photos_dir, check_dir=False), name="media"
+)
 
 
 # Serve the built frontend when it is present (production image). During local dev the

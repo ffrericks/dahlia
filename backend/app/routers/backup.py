@@ -43,7 +43,9 @@ async def import_backup(
 ) -> dict:
     """Restore from a backup zip. Overwrites the current data — gated by a typed phrase."""
     if confirm.strip().lower() != _CONFIRM_PHRASE:
-        raise HTTPException(status_code=400, detail="Typ 'dahlia tool' om te bevestigen.")
+        raise HTTPException(
+            status_code=400, detail="Typ 'dahlia tool' om te bevestigen."
+        )
 
     raw = await file.read()
     try:
@@ -53,7 +55,9 @@ async def import_backup(
 
     names = archive.namelist()
     if "dahlia.db" not in names:
-        raise HTTPException(status_code=400, detail="Back-up bevat geen database (dahlia.db).")
+        raise HTTPException(
+            status_code=400, detail="Back-up bevat geen database (dahlia.db)."
+        )
     # Reject anything outside the expected, safe entries (no path traversal).
     for name in names:
         if name != "dahlia.db" and not name.startswith("photos/"):

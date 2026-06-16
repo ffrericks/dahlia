@@ -6,9 +6,13 @@ def _make_plant(client, code="WIT"):
 
 
 def test_location_codes_increment_per_kind(client):
-    garden = client.post("/api/locations", json={"kind": "garden", "name": "Border"}).json()
+    garden = client.post(
+        "/api/locations", json={"kind": "garden", "name": "Border"}
+    ).json()
     container = client.post("/api/locations", json={"kind": "container"}).json()
-    garden2 = client.post("/api/locations", json={"kind": "garden", "name": "Achtertuin"}).json()
+    garden2 = client.post(
+        "/api/locations", json={"kind": "garden", "name": "Achtertuin"}
+    ).json()
 
     assert garden["code"] == "T01"
     assert garden2["code"] == "T02"
@@ -19,7 +23,9 @@ def test_location_codes_increment_per_kind(client):
 
 def test_plant_into_existing_location_sets_state_planted(client):
     plant = _make_plant(client)
-    location = client.post("/api/locations", json={"kind": "garden", "name": "Border"}).json()
+    location = client.post(
+        "/api/locations", json={"kind": "garden", "name": "Border"}
+    ).json()
 
     planting = client.post(
         "/api/plantings",
@@ -52,10 +58,18 @@ def test_plant_into_new_location_inline(client):
 def test_container_with_two_plants_becomes_bak(client):
     a = _make_plant(client, "WIT")
     b = _make_plant(client, "ROO")
-    location = client.post("/api/locations", json={"kind": "container", "name": "Bak"}).json()
+    location = client.post(
+        "/api/locations", json={"kind": "container", "name": "Bak"}
+    ).json()
 
-    client.post("/api/plantings", json={"plant_id": a["id"], "location_id": location["id"], "position": "voor"})
-    client.post("/api/plantings", json={"plant_id": b["id"], "location_id": location["id"], "position": "achter"})
+    client.post(
+        "/api/plantings",
+        json={"plant_id": a["id"], "location_id": location["id"], "position": "voor"},
+    )
+    client.post(
+        "/api/plantings",
+        json={"plant_id": b["id"], "location_id": location["id"], "position": "achter"},
+    )
 
     detail = client.get(f"/api/locations/{location['id']}").json()
     assert detail["label"] == "bak"
@@ -67,7 +81,9 @@ def test_container_with_two_plants_becomes_bak(client):
 def test_cannot_plant_an_already_planted_plant(client):
     plant = _make_plant(client)
     location = client.post("/api/locations", json={"kind": "garden"}).json()
-    client.post("/api/plantings", json={"plant_id": plant["id"], "location_id": location["id"]})
+    client.post(
+        "/api/plantings", json={"plant_id": plant["id"], "location_id": location["id"]}
+    )
 
     again = client.post(
         "/api/plantings", json={"plant_id": plant["id"], "location_id": location["id"]}
@@ -78,7 +94,9 @@ def test_cannot_plant_an_already_planted_plant(client):
 def test_used_location_cannot_be_deleted(client):
     plant = _make_plant(client)
     location = client.post("/api/locations", json={"kind": "garden"}).json()
-    client.post("/api/plantings", json={"plant_id": plant["id"], "location_id": location["id"]})
+    client.post(
+        "/api/plantings", json={"plant_id": plant["id"], "location_id": location["id"]}
+    )
 
     assert client.delete(f"/api/locations/{location['id']}").status_code == 409
 

@@ -13,7 +13,9 @@ def _avg(values: list[float]) -> float:
 
 def _logs_in_planting(session: Session, planting: Planting) -> list[LogEntry]:
     """Log entries written while the plant stood in this location (this season)."""
-    logs = session.exec(select(LogEntry).where(LogEntry.plant_id == planting.plant_id)).all()
+    logs = session.exec(
+        select(LogEntry).where(LogEntry.plant_id == planting.plant_id)
+    ).all()
     end = planting.lifted_on or date.max
     return [log for log in logs if planting.planted_on <= log.entry_date <= end]
 
@@ -34,7 +36,9 @@ def planting_metrics(session: Session, planting: Planting) -> dict:
 def plant_year_history(session: Session, plant_id: int) -> list[dict]:
     """Per-season summary for one plant: where it stood and how it did each year."""
     plantings = session.exec(
-        select(Planting).where(Planting.plant_id == plant_id).order_by(Planting.planted_on)
+        select(Planting)
+        .where(Planting.plant_id == plant_id)
+        .order_by(Planting.planted_on)
     ).all()
     history = []
     for planting in plantings:
@@ -45,7 +49,9 @@ def plant_year_history(session: Session, plant_id: int) -> list[dict]:
                 "location_code": location_code(location),
                 "location_label": location_label(session, location),
                 "planted_on": planting.planted_on.isoformat(),
-                "lifted_on": planting.lifted_on.isoformat() if planting.lifted_on else None,
+                "lifted_on": planting.lifted_on.isoformat()
+                if planting.lifted_on
+                else None,
                 **planting_metrics(session, planting),
             }
         )
@@ -73,9 +79,29 @@ def location_ranking(session: Session, weights: dict[str, float]) -> list[dict]:
                 "label": location_label(session, location),
                 "name": location.name,
                 "plantings": len(metrics_list),
-                "avg_height": round(_avg([m["height_max"] for m in metrics_list if m["height_max"] is not None]), 1),
-                "avg_flowers": round(_avg([m["flowers_max"] for m in metrics_list if m["flowers_max"] is not None]), 1),
-                "avg_harvested": round(_avg([m["harvested_total"] for m in metrics_list]), 1),
+                "avg_height": round(
+                    _avg(
+                        [
+                            m["height_max"]
+                            for m in metrics_list
+                            if m["height_max"] is not None
+                        ]
+                    ),
+                    1,
+                ),
+                "avg_flowers": round(
+                    _avg(
+                        [
+                            m["flowers_max"]
+                            for m in metrics_list
+                            if m["flowers_max"] is not None
+                        ]
+                    ),
+                    1,
+                ),
+                "avg_harvested": round(
+                    _avg([m["harvested_total"] for m in metrics_list]), 1
+                ),
             }
         )
 

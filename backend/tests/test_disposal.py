@@ -8,7 +8,8 @@ def _plant(client, code="WIT"):
 def test_discard_hides_from_active_list_but_keeps_in_tree(client):
     plant = _plant(client)
     disposed = client.post(
-        f"/api/plants/{plant['id']}/dispose", json={"kind": "discarded", "reason": "Verrot"}
+        f"/api/plants/{plant['id']}/dispose",
+        json={"kind": "discarded", "reason": "Verrot"},
     )
     assert disposed.status_code == 200
     assert disposed.json()["state"] == "discarded"
@@ -46,7 +47,11 @@ def test_disposing_a_planted_plant_frees_the_spot(client):
     plant = _plant(client)
     client.post(
         "/api/plantings",
-        json={"plant_id": plant["id"], "new_location_kind": "garden", "new_location_name": "Border"},
+        json={
+            "plant_id": plant["id"],
+            "new_location_kind": "garden",
+            "new_location_name": "Border",
+        },
     )
     client.post(f"/api/plants/{plant['id']}/dispose", json={"kind": "discarded"})
 
@@ -73,16 +78,25 @@ def test_not_emerged_counts_as_discarded_with_note(client):
 def test_cannot_dispose_twice(client):
     plant = _plant(client)
     client.post(f"/api/plants/{plant['id']}/dispose", json={"kind": "discarded"})
-    again = client.post(f"/api/plants/{plant['id']}/dispose", json={"kind": "given_away"})
+    again = client.post(
+        f"/api/plants/{plant['id']}/dispose", json={"kind": "given_away"}
+    )
     assert again.status_code == 400
 
 
 def test_descendant_tally_counts_owned_vs_total(client):
     parent = _plant(client)
     # Two splits, then give one away.
-    s1 = client.post("/api/plants", json={"origin": "split", "parent_plant_id": parent["id"]}).json()
-    client.post("/api/plants", json={"origin": "split", "parent_plant_id": parent["id"]})
-    client.post(f"/api/plants/{s1['id']}/dispose", json={"kind": "given_away", "recipient": "Jan"})
+    s1 = client.post(
+        "/api/plants", json={"origin": "split", "parent_plant_id": parent["id"]}
+    ).json()
+    client.post(
+        "/api/plants", json={"origin": "split", "parent_plant_id": parent["id"]}
+    )
+    client.post(
+        f"/api/plants/{s1['id']}/dispose",
+        json={"kind": "given_away", "recipient": "Jan"},
+    )
 
     tally = client.get(f"/api/plants/{parent['id']}").json()["descendants"]
     assert tally["total"] == 2

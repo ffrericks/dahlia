@@ -46,18 +46,24 @@ def description_extract(payload: DescriptionRequest) -> dict[str, str]:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Kon de pagina niet ophalen: {exc}")
+        raise HTTPException(
+            status_code=502, detail=f"Kon de pagina niet ophalen: {exc}"
+        )
 
 
 @router.post("", response_model=VarietyRead, status_code=201)
-def create_variety(data: VarietyCreate, session: Session = Depends(get_session)) -> dict:
+def create_variety(
+    data: VarietyCreate, session: Session = Depends(get_session)
+) -> dict:
     variety = Variety(**data.model_dump())
     session.add(variety)
     try:
         session.commit()
     except IntegrityError:
         session.rollback()
-        raise HTTPException(status_code=409, detail=f"Soortcode '{data.code}' bestaat al.")
+        raise HTTPException(
+            status_code=409, detail=f"Soortcode '{data.code}' bestaat al."
+        )
     session.refresh(variety)
     return serialize_variety(session, variety)
 

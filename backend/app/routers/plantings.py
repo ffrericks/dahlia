@@ -10,7 +10,9 @@ router = APIRouter(prefix="/plantings", tags=["plantings"])
 
 
 @router.post("", status_code=201)
-def create_planting(data: PlantingCreate, session: Session = Depends(get_session)) -> dict:
+def create_planting(
+    data: PlantingCreate, session: Session = Depends(get_session)
+) -> dict:
     """Plant a plant into a location, starting its season."""
     try:
         planting = plant_into(session, data)

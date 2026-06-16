@@ -182,6 +182,13 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
             {detail.descendants.owned} nog in bezit
           </p>
         )}
+        <a
+          href={`/api/plants/${detail.id}/summary`}
+          download
+          className="self-start text-sm text-emerald-700 hover:underline"
+        >
+          Download stamboom-samenvatting (.txt)
+        </a>
       </section>
 
       {/* Location & planting history */}

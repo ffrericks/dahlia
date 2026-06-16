@@ -6,7 +6,9 @@ from bs4 import BeautifulSoup
 from .wikipedia import fetch_first_paragraph as _wikipedia_extract
 
 # Wikimedia and most sites reject requests without a descriptive User-Agent.
-_USER_AGENT = "DahliaTool/0.1 (https://github.com/ffrericks/dahlia; self-hosted personal app)"
+_USER_AGENT = (
+    "DahliaTool/0.1 (https://github.com/ffrericks/dahlia; self-hosted personal app)"
+)
 
 
 def extract_description(url: str) -> str:

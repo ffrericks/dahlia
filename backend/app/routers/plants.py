@@ -1,12 +1,22 @@
 from collections import Counter, defaultdict
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import PlainTextResponse
 from sqlmodel import Session, select
 
 from datetime import date
 
 from ..db import get_session
-from ..models import Disposal, Location, LogEntry, Photo, Plant, Planting, StorageBox, Variety
+from ..models import (
+    Disposal,
+    Location,
+    LogEntry,
+    Photo,
+    Plant,
+    Planting,
+    StorageBox,
+    Variety,
+)
 from ..schemas.disposal import DisposalCreate
 from ..schemas.log import LogEntryCreate
 from ..schemas.plant import PlantCreate, PlantUpdate, VarietyAssign
@@ -31,6 +41,7 @@ from ..services.photos import (
     save_upload,
 )
 from ..services.storage import assign_to_box, box_code, release_box
+from ..services.summary import build_plant_summary
 
 # Plants in these states have left the collection: hidden from the active list.
 _GONE_STATES = ["discarded", "given_away"]
@@ -39,6 +50,7 @@ router = APIRouter(prefix="/plants", tags=["plants"])
 
 
 # --- serialization helpers -------------------------------------------------
+
 
 def serialize_plant(session: Session, plant: Plant) -> dict:
     # A provisional (unknown) plant has no variety/number yet — use its nickname.
@@ -136,6 +148,7 @@ def serialize_disposal(disposal: Disposal) -> dict:
 
 # --- collection routes (declared before /{plant_id} to avoid clashes) ------
 
+
 @router.get("")
 def list_plants(
     variety_id: int | None = None,
@@ -196,7 +209,7 @@ def search_plants(q: str, session: Session = Depends(get_session)) -> list[dict]
     for plant in session.exec(select(Plant)).all():
         data = serialize_plant(session, plant)
         full = data["full_code"] or ""
-        composite = (data["storage"]["composite"].upper() if data["storage"] else "")
+        composite = data["storage"]["composite"].upper() if data["storage"] else ""
         nickname = (plant.nickname or "").upper()
 
         # A scanned/typed value may be the bare code, or carry a storage/location suffix.
@@ -221,6 +234,7 @@ def create_plant(data: PlantCreate, session: Session = Depends(get_session)) -> 
 
 # --- single-plant routes ---------------------------------------------------
 
+
 @router.get("/{plant_id}")
 def get_plant(plant_id: int, session: Session = Depends(get_session)) -> dict:
     plant = session.get(Plant, plant_id)
@@ -228,11 +242,15 @@ def get_plant(plant_id: int, session: Session = Depends(get_session)) -> dict:
         raise HTTPException(status_code=404, detail="Plant niet gevonden.")
 
     data = serialize_plant(session, plant)
-    parent = session.get(Plant, plant.parent_plant_id) if plant.parent_plant_id else None
+    parent = (
+        session.get(Plant, plant.parent_plant_id) if plant.parent_plant_id else None
+    )
     data["parent"] = serialize_plant(session, parent) if parent else None
 
     child_plants = session.exec(
-        select(Plant).where(Plant.parent_plant_id == plant_id).order_by(Plant.variety_id, Plant.ss, Plant.ddd)
+        select(Plant)
+        .where(Plant.parent_plant_id == plant_id)
+        .order_by(Plant.variety_id, Plant.ss, Plant.ddd)
     ).all()
     data["children"] = [serialize_plant(session, c) for c in child_plants]
 
@@ -241,18 +259,24 @@ def get_plant(plant_id: int, session: Session = Depends(get_session)) -> dict:
 
     # Full location history across seasons (current + past plantings).
     plantings = session.exec(
-        select(Planting).where(Planting.plant_id == plant_id).order_by(Planting.planted_on)
+        select(Planting)
+        .where(Planting.plant_id == plant_id)
+        .order_by(Planting.planted_on)
     ).all()
     data["plantings"] = [serialize_planting(session, pl) for pl in plantings]
 
     # Logbook (newest first).
     logs = session.exec(
-        select(LogEntry).where(LogEntry.plant_id == plant_id).order_by(LogEntry.entry_date.desc(), LogEntry.id.desc())
+        select(LogEntry)
+        .where(LogEntry.plant_id == plant_id)
+        .order_by(LogEntry.entry_date.desc(), LogEntry.id.desc())
     ).all()
     data["logs"] = [serialize_log(log) for log in logs]
 
     # Disposal record (if the plant has left the collection).
-    disposal = session.exec(select(Disposal).where(Disposal.plant_id == plant_id)).first()
+    disposal = session.exec(
+        select(Disposal).where(Disposal.plant_id == plant_id)
+    ).first()
     data["disposal"] = serialize_disposal(disposal) if disposal else None
 
     # How many descendants this plant has had, and how many are still owned.
@@ -261,6 +285,20 @@ def get_plant(plant_id: int, session: Session = Depends(get_session)) -> dict:
     # Per-season performance history (multi-year).
     data["yearly"] = plant_year_history(session, plant_id)
     return data
+
+
+@router.get("/{plant_id}/summary")
+def plant_summary(
+    plant_id: int, session: Session = Depends(get_session)
+) -> PlainTextResponse:
+    """A hand-over text file: lineage, line averages and upcoming care tips."""
+    try:
+        filename, text = build_plant_summary(session, plant_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return PlainTextResponse(
+        text, headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 
 @router.patch("/{plant_id}")
@@ -305,7 +343,8 @@ def delete_plant(plant_id: int, session: Session = Depends(get_session)) -> None
     # Keep lineage intact: don't allow deleting a plant that has descendants.
     if session.exec(select(Plant).where(Plant.parent_plant_id == plant_id)).first():
         raise HTTPException(
-            status_code=409, detail="Deze plant heeft afstammelingen en kan niet verwijderd worden."
+            status_code=409,
+            detail="Deze plant heeft afstammelingen en kan niet verwijderd worden.",
         )
 
     for photo in session.exec(select(Photo).where(Photo.plant_id == plant_id)).all():
@@ -316,6 +355,7 @@ def delete_plant(plant_id: int, session: Session = Depends(get_session)) -> None
 
 
 # --- photos ----------------------------------------------------------------
+
 
 @router.post("/{plant_id}/photos", status_code=201)
 async def upload_photo(
@@ -334,10 +374,13 @@ async def upload_photo(
         raise HTTPException(status_code=400, detail=str(exc))
 
     # The first photo of a plant automatically becomes its profile photo.
-    is_first = profile_photo_of(session, plant_id) is None and not session.exec(
-        select(Photo).where(Photo.plant_id == plant_id)
-    ).first()
-    photo = Photo(plant_id=plant_id, filename=filename, thumbnail=thumbnail, is_profile=is_first)
+    is_first = (
+        profile_photo_of(session, plant_id) is None
+        and not session.exec(select(Photo).where(Photo.plant_id == plant_id)).first()
+    )
+    photo = Photo(
+        plant_id=plant_id, filename=filename, thumbnail=thumbnail, is_profile=is_first
+    )
     session.add(photo)
     session.commit()
     session.refresh(photo)
@@ -374,7 +417,9 @@ def delete_photo(
 
     # If we removed the profile photo, promote another so the plant keeps an image.
     if was_profile:
-        remaining = session.exec(select(Photo).where(Photo.plant_id == plant_id)).first()
+        remaining = session.exec(
+            select(Photo).where(Photo.plant_id == plant_id)
+        ).first()
         if remaining:
             remaining.is_profile = True
             session.add(remaining)
@@ -383,8 +428,11 @@ def delete_photo(
 
 # --- winter / storage actions ----------------------------------------------
 
+
 @router.post("/{plant_id}/lift")
-def lift(plant_id: int, data: LiftRequest, session: Session = Depends(get_session)) -> dict:
+def lift(
+    plant_id: int, data: LiftRequest, session: Session = Depends(get_session)
+) -> dict:
     """Rooien: end the season and return the plant to storage."""
     try:
         plant = planting_service.lift_plant(session, plant_id, data.lifted_on)
@@ -444,6 +492,7 @@ def remove_from_storage(plant_id: int, session: Session = Depends(get_session)) 
 
 # --- logbook ---------------------------------------------------------------
 
+
 @router.post("/{plant_id}/logs", status_code=201)
 def add_log(
     plant_id: int, data: LogEntryCreate, session: Session = Depends(get_session)
@@ -468,7 +517,9 @@ def add_log(
 
 
 @router.delete("/{plant_id}/logs/{log_id}", status_code=204)
-def delete_log(plant_id: int, log_id: int, session: Session = Depends(get_session)) -> None:
+def delete_log(
+    plant_id: int, log_id: int, session: Session = Depends(get_session)
+) -> None:
     log = session.get(LogEntry, log_id)
     if log is None or log.plant_id != plant_id:
         raise HTTPException(status_code=404, detail="Logboek-item niet gevonden.")
@@ -478,8 +529,11 @@ def delete_log(plant_id: int, log_id: int, session: Session = Depends(get_sessio
 
 # --- disposal --------------------------------------------------------------
 
+
 @router.post("/{plant_id}/dispose")
-def dispose(plant_id: int, data: DisposalCreate, session: Session = Depends(get_session)) -> dict:
+def dispose(
+    plant_id: int, data: DisposalCreate, session: Session = Depends(get_session)
+) -> dict:
     """Discard or give away a plant (kept in the family tree, hidden from the active list)."""
     try:
         plant = disposal_service.dispose_plant(
@@ -498,7 +552,7 @@ def dispose(plant_id: int, data: DisposalCreate, session: Session = Depends(get_
 
 @router.post("/{plant_id}/not-emerged")
 def not_emerged(plant_id: int, session: Session = Depends(get_session)) -> dict:
-    """"Niet opgekomen" — counts as discarded, with a logbook note."""
+    """ "Niet opgekomen" — counts as discarded, with a logbook note."""
     try:
         plant = disposal_service.mark_not_emerged(session, plant_id)
     except ValueError as exc:

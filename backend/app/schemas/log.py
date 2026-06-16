@@ -31,7 +31,12 @@ class LogEntryCreate(BaseModel):
     def not_empty(self):
         has_metric = any(
             v is not None
-            for v in (self.height_cm, self.bud_count, self.flower_count, self.harvested_count)
+            for v in (
+                self.height_cm,
+                self.bud_count,
+                self.flower_count,
+                self.harvested_count,
+            )
         )
         if not self.text and not has_metric and not self.fertilized:
             raise ValueError(

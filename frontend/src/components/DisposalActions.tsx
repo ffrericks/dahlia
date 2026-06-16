@@ -115,6 +115,13 @@ export default function DisposalActions({ detail, onChanged }: Props) {
             placeholder="Aan wie? (naam)"
             className="rounded-lg border border-stone-300 px-3 py-2"
           />
+          <a
+            href={`/api/plants/${detail.id}/summary`}
+            download
+            className="text-sm text-emerald-700 hover:underline"
+          >
+            Download samenvatting (.txt) om mee te sturen
+          </a>
           <DateField value={date} onChange={setDate} />
           <Buttons
             onConfirm={() =>

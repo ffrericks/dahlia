@@ -25,7 +25,9 @@ def plant_into(session: Session, data: PlantingCreate) -> Planting:
         if location is None:
             raise ValueError("Locatie niet gevonden.")
     else:
-        location = create_location(session, data.new_location_kind, data.new_location_name)
+        location = create_location(
+            session, data.new_location_kind, data.new_location_name
+        )
 
     planting = Planting(
         plant_id=plant.id,

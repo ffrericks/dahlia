@@ -10,9 +10,7 @@ def test_parse_dutch_article():
 
 
 def test_parse_handles_url_encoding():
-    lang, title = parse_wikipedia_target(
-        "https://en.wikipedia.org/wiki/Dahlia_(genus)"
-    )
+    lang, title = parse_wikipedia_target("https://en.wikipedia.org/wiki/Dahlia_(genus)")
     assert lang == "en"
     assert title == "Dahlia_(genus)"
 

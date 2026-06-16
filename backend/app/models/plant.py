@@ -9,7 +9,9 @@ class Plant(SQLModel, table=True):
     stam plant itself). The full code is variety.code + this number, e.g. WIT01000.
     """
 
-    __table_args__ = (UniqueConstraint("variety_id", "ss", "ddd", name="uq_plant_number"),)
+    __table_args__ = (
+        UniqueConstraint("variety_id", "ss", "ddd", name="uq_plant_number"),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     # Variety/number are None for a provisional plant (unknown origin) until assigned.
@@ -21,7 +23,9 @@ class Plant(SQLModel, table=True):
     nickname: str | None = Field(default=None)
 
     # Lineage: the mother plant this came from (None for purchased/gifted/unknown stock).
-    parent_plant_id: int | None = Field(default=None, foreign_key="plant.id", index=True)
+    parent_plant_id: int | None = Field(
+        default=None, foreign_key="plant.id", index=True
+    )
 
     # split | seedling | purchased | gifted | unknown
     origin: str
@@ -31,6 +35,8 @@ class Plant(SQLModel, table=True):
     # Set during winter storage / early spring: awaiting_eye | has_eye | blind
     eye_status: str | None = Field(default=None)
     # The winter-storage box this stored tuber sits in (None if not boxed).
-    storage_box_id: int | None = Field(default=None, foreign_key="storagebox.id", index=True)
+    storage_box_id: int | None = Field(
+        default=None, foreign_key="storagebox.id", index=True
+    )
     # Set when discarded for disease (Phase 6); flags siblings in the family tree.
     disease_warning: bool = Field(default=False)
