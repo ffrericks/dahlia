@@ -1,5 +1,4 @@
 from collections import defaultdict
-from datetime import date
 
 from sqlmodel import Session, select
 
@@ -127,6 +126,11 @@ def build_plant_summary(session: Session, plant_id: int) -> tuple[str, str]:
     lines.append("=" * len(title))
     lines.append("")
 
+    if variety and variety.description:
+        lines.append("Over de soort:")
+        lines.append(variety.description)
+        lines.append("")
+
     if year:
         lines.append(
             f"Herkomst: deze lijn begon met een knol die rond {year} is {acquired}."
@@ -157,13 +161,34 @@ def build_plant_summary(session: Session, plant_id: int) -> tuple[str, str]:
         lines.append("- Nog geen metingen vastgelegd.")
     lines.append("")
 
-    # Care for the coming three months.
-    month = date.today().month
-    lines.append("Verzorging de komende maanden:")
-    for offset in range(3):
-        m = (month - 1 + offset) % 12 + 1
-        titles = [tip["title"] for tip in tips_for_month(m)]
-        lines.append(f"- {_MONTHS_NL[m - 1].capitalize()}: {', '.join(titles)}")
+    # Care across the growing season (planting -> lifting) plus winter storage.
+    # Progressive dedup: each tip is listed only the first time it becomes relevant.
+    lines.append("Verzorging door het seizoen:")
+    seen: set[str] = set()
+
+    def take_new(tips: list[dict]) -> list[str]:
+        fresh: list[str] = []
+        for tip in tips:
+            if tip["title"] not in seen:
+                seen.add(tip["title"])
+                fresh.append(tip["title"])
+        return fresh
+
+    basics = take_new(
+        [t for m in range(5, 11) for t in tips_for_month(m) if t["category"] == "basis"]
+    )
+    if basics:
+        lines.append(f"- Hele seizoen: {', '.join(basics)}")
+
+    for m in range(5, 11):  # mei (planten) t/m oktober (rooien)
+        titles = take_new([t for t in tips_for_month(m) if t["category"] != "basis"])
+        if titles:
+            lines.append(f"- {_MONTHS_NL[m - 1].capitalize()}: {', '.join(titles)}")
+
+    winter = take_new([t for m in (11, 12, 1, 2) for t in tips_for_month(m)])
+    if winter:
+        lines.append(f"- Winterberging: {', '.join(winter)}")
+
     lines.append("")
     lines.append("Gemaakt met Dahlia Tool.")
 

@@ -49,7 +49,26 @@ def test_summary_reports_generation_and_line_stats(client):
     assert "rond 2026 is gekocht" in text
     assert "Gemiddelde hoogte: 100 cm" in text
     assert "Gemiddeld aantal bloemen (piek): 12" in text
-    assert "Verzorging de komende maanden" in text
+    assert "Verzorging door het seizoen" in text
+    assert "Mei:" in text  # season runs May..October
+    assert "Winterberging:" in text
+
+
+def test_summary_includes_variety_description(client):
+    v = client.post(
+        "/api/varieties",
+        json={
+            "code": "BUM",
+            "name": "Bumble Rumble",
+            "description": "Mooie halskraagdahlia.",
+        },
+    ).json()
+    p = client.post(
+        "/api/plants", json={"origin": "purchased", "variety_id": v["id"]}
+    ).json()
+    text = client.get(f"/api/plants/{p['id']}/summary").text
+    assert "Over de soort:" in text
+    assert "Mooie halskraagdahlia." in text
 
 
 def test_summary_of_root_says_original(client):

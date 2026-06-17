@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
 
@@ -40,3 +42,5 @@ class Plant(SQLModel, table=True):
     )
     # Set when discarded for disease (Phase 6); flags siblings in the family tree.
     disease_warning: bool = Field(default=False)
+    # When the plant was registered (for the active-plants-over-time chart).
+    created_on: date | None = Field(default=None)

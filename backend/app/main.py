@@ -10,6 +10,7 @@ from .routers import (
     automation,
     backup,
     care,
+    dashboard,
     health,
     insights,
     locations,
@@ -42,6 +43,7 @@ app.include_router(insights.router, prefix="/api")
 app.include_router(settings_router.router, prefix="/api")
 app.include_router(automation.router, prefix="/api")
 app.include_router(backup.router, prefix="/api")
+app.include_router(dashboard.router, prefix="/api")
 
 # Serve uploaded photos from the data volume. check_dir=False because the folder is
 # created at startup (init_db), which runs after this module is imported.

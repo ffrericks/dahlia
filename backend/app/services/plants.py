@@ -1,4 +1,5 @@
 import re
+from datetime import date
 
 from sqlmodel import Session, select
 
@@ -81,6 +82,7 @@ def create_plant(session: Session, data: PlantCreate) -> Plant:
         parent_plant_id=parent_id,
         origin=data.origin,
         state=data.state,
+        created_on=date.today(),
     )
     session.add(plant)
     session.commit()

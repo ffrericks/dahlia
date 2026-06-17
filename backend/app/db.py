@@ -1,6 +1,7 @@
 from collections.abc import Iterator
+from datetime import date
 
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 
 from .config import settings
 
@@ -16,6 +17,7 @@ engine = create_engine(
 # in place, so existing databases upgrade without losing data.
 _ADDED_COLUMNS = {
     "logentry": [("fertilized", "BOOLEAN NOT NULL DEFAULT 0")],
+    "plant": [("created_on", "DATE")],
 }
 
 
@@ -32,6 +34,29 @@ def _ensure_columns() -> None:
                     conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
 
 
+def _backfill_created_on() -> None:
+    """Give existing plants a created_on from their earliest event (or today)."""
+    from .models import LogEntry, Plant, Planting
+
+    with Session(engine) as session:
+        plants = session.exec(select(Plant).where(Plant.created_on.is_(None))).all()
+        if not plants:
+            return
+        for plant in plants:
+            dates = list(
+                session.exec(
+                    select(Planting.planted_on).where(Planting.plant_id == plant.id)
+                ).all()
+            ) + list(
+                session.exec(
+                    select(LogEntry.entry_date).where(LogEntry.plant_id == plant.id)
+                ).all()
+            )
+            plant.created_on = min(dates) if dates else date.today()
+            session.add(plant)
+        session.commit()
+
+
 def init_db() -> None:
     """Create the data folders and any tables defined by SQLModel models."""
     settings.data_dir.mkdir(parents=True, exist_ok=True)
@@ -41,6 +66,7 @@ def init_db() -> None:
 
     SQLModel.metadata.create_all(engine)
     _ensure_columns()
+    _backfill_created_on()
 
 
 def get_session() -> Iterator[Session]:

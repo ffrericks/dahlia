@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Insights from './pages/Insights'
+import Dashboard from './pages/Dashboard'
 import Locations from './pages/Locations'
 import Plants from './pages/Plants'
 import Settings from './pages/Settings'
@@ -9,20 +9,20 @@ import Varieties from './pages/Varieties'
 
 type Tab =
   | 'plants'
+  | 'metrix'
   | 'varieties'
   | 'locations'
   | 'storage'
   | 'tree'
-  | 'insights'
   | 'settings'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'plants', label: 'Planten' },
+  { id: 'metrix', label: 'Metrix' },
   { id: 'varieties', label: 'Soorten' },
   { id: 'locations', label: 'Plekken' },
   { id: 'storage', label: 'Opslag' },
   { id: 'tree', label: 'Stamboom' },
-  { id: 'insights', label: 'Beste plek' },
   { id: 'settings', label: 'Instellingen' },
 ]
 
@@ -36,9 +36,9 @@ function readDeepLink(): { plantId: number | null; query: string | null } {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('plants')
   // A QR scanned with the phone camera opens the app with ?plant= or ?q= — handle it once.
   const [deepLink, setDeepLink] = useState(readDeepLink)
+  const [tab, setTab] = useState<Tab>('plants')
 
   useEffect(() => {
     if (deepLink.plantId || deepLink.query) {
@@ -71,6 +71,7 @@ export default function App() {
           ))}
         </nav>
 
+        {tab === 'metrix' && <Dashboard />}
         {tab === 'plants' && (
           <Plants initialPlantId={deepLink.plantId} initialQuery={deepLink.query} />
         )}
@@ -78,7 +79,6 @@ export default function App() {
         {tab === 'locations' && <Locations />}
         {tab === 'storage' && <Storage />}
         {tab === 'tree' && <Tree />}
-        {tab === 'insights' && <Insights />}
         {tab === 'settings' && <Settings />}
       </main>
     </div>
