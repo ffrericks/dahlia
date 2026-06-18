@@ -434,7 +434,7 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono">{detail.storage?.composite ?? detail.full_code}</span>
-            {toolUrl && <CopyUrlButton url={`${toolUrl}/?plant=${detail.id}`} />}
+            <CopyUrlButton url={`${toolUrl ?? window.location.origin}/?plant=${detail.id}`} />
             <button
               onClick={() => setShowQr((v) => !v)}
               className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100"
@@ -445,18 +445,15 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
 
           {showQr && (
             <QrLabel
-              value={
-                toolUrl
-                  ? `${toolUrl}/?plant=${detail.id}`
-                  : (detail.storage?.composite ?? detail.full_code!)
-              }
+              value={`${toolUrl ?? window.location.origin}/?plant=${detail.id}`}
               caption={detail.storage?.composite ?? detail.full_code!}
             />
           )}
 
           {!toolUrl && (
             <p className="text-xs text-stone-400">
-              Stel het adres van de tool in (Instellingen) voor een werkende URL/QR.
+              Tip: stel het adres van de tool in (Instellingen) voor een vaste URL die ook op je
+              telefoon werkt.
             </p>
           )}
         </section>
