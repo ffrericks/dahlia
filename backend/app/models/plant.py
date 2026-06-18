@@ -44,3 +44,5 @@ class Plant(SQLModel, table=True):
     disease_warning: bool = Field(default=False)
     # When the plant was registered (for the active-plants-over-time chart).
     created_on: date | None = Field(default=None)
+    # True while a cutting is rooting in its own pot (before it's planted out).
+    rooting: bool = Field(default=False)

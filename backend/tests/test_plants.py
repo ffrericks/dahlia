@@ -47,24 +47,6 @@ def test_split_increments_ddd_within_stam(client):
     assert grandchild["parent_plant_id"] == first_split["id"]
 
 
-def test_cutting_is_a_descendant_in_the_same_stam(client):
-    variety = make_variety(client)
-    stam = client.post(
-        "/api/plants", json={"origin": "purchased", "variety_id": variety["id"]}
-    ).json()
-    cutting = client.post(
-        "/api/plants", json={"origin": "cutting", "parent_plant_id": stam["id"]}
-    ).json()
-    assert cutting["number"] == "01001"  # next DDD in the parent's stam
-    assert cutting["full_code"] == "WIT01001"
-    assert cutting["origin"] == "cutting"
-    assert cutting["parent_plant_id"] == stam["id"]
-
-
-def test_cutting_requires_parent(client):
-    assert client.post("/api/plants", json={"origin": "cutting"}).status_code == 422
-
-
 def test_new_plant_is_marked_new_until_touched(client):
     variety = make_variety(client)
     plant = client.post(

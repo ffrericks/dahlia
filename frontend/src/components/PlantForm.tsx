@@ -10,7 +10,7 @@ interface Props {
   onCancel: () => void
 }
 
-const ORIGINS: Origin[] = ['purchased', 'gifted', 'split', 'cutting', 'seedling', 'unknown']
+const ORIGINS: Origin[] = ['purchased', 'gifted', 'split', 'seedling', 'unknown']
 
 export default function PlantForm({ onSave, onCancel }: Props) {
   const [origin, setOrigin] = useState<Origin>('purchased')
@@ -36,7 +36,7 @@ export default function PlantForm({ onSave, onCancel }: Props) {
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
   }, [])
 
-  const needsParent = origin === 'split' || origin === 'cutting' || origin === 'seedling'
+  const needsParent = origin === 'split' || origin === 'seedling'
   const choosesVariety = origin === 'purchased' || origin === 'gifted'
   const needsNewVariety = origin === 'seedling' || (choosesVariety && varietyMode === 'new')
   const needsExistingVariety = choosesVariety && varietyMode === 'existing'

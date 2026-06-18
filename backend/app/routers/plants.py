@@ -19,8 +19,15 @@ from ..models import (
 )
 from ..schemas.disposal import DisposalCreate
 from ..schemas.log import LogEntryCreate
-from ..schemas.plant import PlantCreate, PlantUpdate, VarietyAssign
+from ..schemas.plant import (
+    CuttingCreate,
+    PlantCreate,
+    PlantUpdate,
+    TransplantCreate,
+    VarietyAssign,
+)
 from ..schemas.winter import EyeStatusUpdate, LiftRequest, StorageAssign
+from ..services import cuttings as cutting_service
 from ..services import disposal as disposal_service
 from ..services import plantings as planting_service
 from ..services import plants as plant_service
@@ -96,6 +103,7 @@ def serialize_plant(session: Session, plant: Plant) -> dict:
         "storage": _storage_info(session, plant, label),
         "last_fertilized": _iso(last_fertilized(session, plant.id)),
         "is_new": _is_untouched(session, plant),
+        "rooting": plant.rooting,
     }
 
 
@@ -344,6 +352,30 @@ def assign_variety(
             new_variety_code=data.new_variety_code,
             new_variety_name=data.new_variety_name,
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return serialize_plant(session, plant)
+
+
+@router.post("/{plant_id}/cutting", status_code=201)
+def make_cutting(
+    plant_id: int, data: CuttingCreate, session: Session = Depends(get_session)
+) -> dict:
+    """Take a cutting from this plant; it lands in its own pot, still rooting."""
+    try:
+        cutting = cutting_service.create_cutting(session, plant_id, data.new_location_name)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return serialize_plant(session, cutting)
+
+
+@router.post("/{plant_id}/transplant")
+def transplant(
+    plant_id: int, data: TransplantCreate, session: Session = Depends(get_session)
+) -> dict:
+    """Plant a rooting cutting out into a real location (the pot lapses)."""
+    try:
+        plant = cutting_service.transplant_cutting(session, plant_id, data)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     return serialize_plant(session, plant)

@@ -46,6 +46,7 @@ export interface Plant {
   storage: PlantStorage | null
   last_fertilized: string | null
   is_new: boolean
+  rooting: boolean
 }
 
 export interface Photo {
@@ -175,6 +176,30 @@ export function updatePlant(id: number, nickname: string | null): Promise<Plant>
 export function assignVariety(id: number, input: AssignVarietyInput): Promise<Plant> {
   return apiFetch<Plant>(`/plants/${id}/variety`, {
     method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export interface TransplantInput {
+  location_id?: number | null
+  new_location_kind?: 'garden' | 'container' | null
+  new_location_name?: string | null
+  position?: string | null
+  planted_on?: string | null
+}
+
+// Take a cutting from a plant; it lands in its own pot, still rooting.
+export function createCutting(parentId: number, newLocationName?: string | null): Promise<Plant> {
+  return apiFetch<Plant>(`/plants/${parentId}/cutting`, {
+    method: 'POST',
+    body: JSON.stringify({ new_location_name: newLocationName ?? null }),
+  })
+}
+
+// Plant a rooting cutting out into a real location (the pot lapses).
+export function transplantCutting(plantId: number, input: TransplantInput): Promise<Plant> {
+  return apiFetch<Plant>(`/plants/${plantId}/transplant`, {
+    method: 'POST',
     body: JSON.stringify(input),
   })
 }

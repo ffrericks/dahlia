@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import type { Origin, PlantDetail } from '../api/plants'
-import { createPlant, disposePlant, markNotEmerged } from '../api/plants'
+import {
+  createCutting,
+  createPlant,
+  disposePlant,
+  markNotEmerged,
+  transplantCutting,
+} from '../api/plants'
 import { todayISO } from '../dates'
+import PlantingForm from './PlantingForm'
 
 interface Props {
   detail: PlantDetail
@@ -9,7 +16,7 @@ interface Props {
   onBack: () => void
 }
 
-type Mode = null | 'discard' | 'giveaway'
+type Mode = null | 'discard' | 'giveaway' | 'transplant'
 
 export default function DisposalActions({ detail, onChanged, onBack }: Props) {
   const [mode, setMode] = useState<Mode>(null)
@@ -30,16 +37,29 @@ export default function DisposalActions({ detail, onChanged, onBack }: Props) {
     }
   }
 
-  // Split or take a cutting: create a direct descendant, then go back to the overview
-  // where it shows up with a "nieuw" badge.
+  // Split: create a direct descendant, then go back to the overview.
   async function propagate(origin: Origin) {
     setError(null)
     try {
       const child = await createPlant({ origin, parent_plant_id: detail.id })
-      const what = origin === 'cutting' ? 'Stek' : 'Afsplitsing'
       onChanged()
       onBack()
-      window.alert(`${what} ${child.full_code ?? ''} aangemaakt. Hij staat met "nieuw" in de lijst.`)
+      window.alert(`Afsplitsing ${child.full_code ?? ''} aangemaakt. Hij staat met "nieuw" in de lijst.`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  // Take a cutting: a descendant that lands in its own pot.
+  async function makeCutting() {
+    setError(null)
+    try {
+      const child = await createCutting(detail.id)
+      onChanged()
+      onBack()
+      window.alert(
+        `Stek ${child.full_code ?? ''} aangemaakt in pot ${child.location?.code ?? ''}.`,
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -72,22 +92,32 @@ export default function DisposalActions({ detail, onChanged, onBack }: Props) {
 
       {mode === null && (
         <div className="flex flex-col gap-2">
-          {/* Propagate: a split or cutting becomes a direct descendant. */}
-          {detail.variety_id !== null && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => propagate('split')}
-                className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
-              >
-                Splitsen
-              </button>
-              <button
-                onClick={() => propagate('cutting')}
-                className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
-              >
-                Stekken
-              </button>
-            </div>
+          {detail.rooting ? (
+            // A rooting cutting can't be split/cut — it gets planted out.
+            <button
+              onClick={() => setMode('transplant')}
+              className="self-start rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Stek uitplanten
+            </button>
+          ) : (
+            // Propagate: a split or cutting becomes a direct descendant.
+            detail.variety_id !== null && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => propagate('split')}
+                  className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                >
+                  Splitsen
+                </button>
+                <button
+                  onClick={makeCutting}
+                  className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                >
+                  Stekken
+                </button>
+              </div>
+            )
           )}
           <div className="flex flex-wrap gap-2">
             <button
@@ -172,6 +202,28 @@ export default function DisposalActions({ detail, onChanged, onBack }: Props) {
             confirmLabel="Weggeven"
           />
         </div>
+      )}
+
+      {mode === 'transplant' && (
+        <PlantingForm
+          plantId={detail.id}
+          title="Stek uitplanten"
+          submitLabel="Uitplanten"
+          onSubmit={(input) =>
+            transplantCutting(detail.id, {
+              location_id: input.location_id ?? null,
+              new_location_kind: input.new_location_kind ?? null,
+              new_location_name: input.new_location_name ?? null,
+              position: input.position ?? null,
+              planted_on: input.planted_on ?? null,
+            })
+          }
+          onDone={() => {
+            setMode(null)
+            onChanged()
+          }}
+          onCancel={() => setMode(null)}
+        />
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}

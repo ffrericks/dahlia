@@ -17,7 +17,10 @@ engine = create_engine(
 # in place, so existing databases upgrade without losing data.
 _ADDED_COLUMNS = {
     "logentry": [("fertilized", "BOOLEAN NOT NULL DEFAULT 0")],
-    "plant": [("created_on", "DATE")],
+    "plant": [
+        ("created_on", "DATE"),
+        ("rooting", "BOOLEAN NOT NULL DEFAULT 0"),
+    ],
 }
 
 

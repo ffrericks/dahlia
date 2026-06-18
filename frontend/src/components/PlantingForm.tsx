@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Location, LocationKind } from '../api/locations'
 import { listLocations } from '../api/locations'
+import type { PlantingInput } from '../api/plantings'
 import { createPlanting } from '../api/plantings'
 import { todayISO } from '../dates'
 
@@ -8,9 +9,20 @@ interface Props {
   plantId: number
   onDone: () => void
   onCancel: () => void
+  // Reused for "stek uitplanten": override the title/button and the save action.
+  title?: string
+  submitLabel?: string
+  onSubmit?: (input: PlantingInput) => Promise<unknown>
 }
 
-export default function PlantingForm({ plantId, onDone, onCancel }: Props) {
+export default function PlantingForm({
+  plantId,
+  onDone,
+  onCancel,
+  title = 'Plant op een plek',
+  submitLabel = 'Planten',
+  onSubmit,
+}: Props) {
   const [mode, setMode] = useState<'existing' | 'new'>('existing')
   const [locationId, setLocationId] = useState<number | ''>('')
   const [newKind, setNewKind] = useState<LocationKind>('garden')
@@ -36,14 +48,15 @@ export default function PlantingForm({ plantId, onDone, onCancel }: Props) {
     setError(null)
     setSaving(true)
     try {
-      await createPlanting({
+      const input: PlantingInput = {
         plant_id: plantId,
         location_id: mode === 'existing' ? Number(locationId) : null,
         new_location_kind: mode === 'new' ? newKind : null,
         new_location_name: mode === 'new' ? newName.trim() || null : null,
         position: position.trim() || null,
         planted_on: plantedOn,
-      })
+      }
+      await (onSubmit ? onSubmit(input) : createPlanting(input))
       onDone()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -53,7 +66,7 @@ export default function PlantingForm({ plantId, onDone, onCancel }: Props) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3 rounded-lg border border-stone-200 bg-stone-50 p-4">
-      <h4 className="font-medium">Plant op een plek</h4>
+      <h4 className="font-medium">{title}</h4>
 
       <div className="flex gap-4 text-sm">
         <label className="flex items-center gap-1">
@@ -130,7 +143,7 @@ export default function PlantingForm({ plantId, onDone, onCancel }: Props) {
           disabled={saving}
           className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
         >
-          {saving ? 'Bezig…' : 'Planten'}
+          {saving ? 'Bezig…' : submitLabel}
         </button>
         <button
           type="button"

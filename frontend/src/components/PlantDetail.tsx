@@ -17,6 +17,7 @@ import { getSettings } from '../api/settings'
 import { todayISO } from '../dates'
 import { EYE_STATUS_LABELS, ORIGIN_LABELS, stateLabel } from '../labels'
 import AssignVarietyForm from './AssignVarietyForm'
+import CuttingTips from './CuttingTips'
 import DisposalActions from './DisposalActions'
 import Logbook from './Logbook'
 import PlantingForm from './PlantingForm'
@@ -37,6 +38,7 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
   const [boxNumber, setBoxNumber] = useState('')
   const [liftDate, setLiftDate] = useState(todayISO())
   const [toolUrl, setToolUrl] = useState<string | null>(null)
+  const [showQr, setShowQr] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   // Tool URL drives the QR deep-link (so a phone camera opens the plant directly).
@@ -191,6 +193,8 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
         </a>
       </section>
 
+      {detail.rooting && <CuttingTips />}
+
       {/* Location & planting history */}
       <section className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
         <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">Plek</h3>
@@ -252,8 +256,8 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
         )}
       </section>
 
-      {/* Winter & storage */}
-      {(detail.state === 'planted' || detail.state === 'stored') && (
+      {/* Winter & storage (a rooting cutting uses "Stek uitplanten" instead of rooien) */}
+      {((detail.state === 'planted' && !detail.rooting) || detail.state === 'stored') && (
         <section className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
           <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">
             Winter &amp; opslag
@@ -427,22 +431,32 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
       {(detail.storage?.composite || detail.full_code) && (
         <section className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
           <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">Label</h3>
-          <QrLabel
-            value={
-              toolUrl
-                ? `${toolUrl}/?plant=${detail.id}`
-                : (detail.storage?.composite ?? detail.full_code!)
-            }
-            caption={detail.storage?.composite ?? detail.full_code!}
-          />
-          {toolUrl ? (
-            <p className="text-center text-xs text-stone-400">
-              Scan met je telefooncamera om deze plant te openen.
-            </p>
-          ) : (
-            <p className="text-center text-xs text-stone-400">
-              Stel het adres van de tool in (Instellingen) zodat de QR-code de plant rechtstreeks
-              opent.
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono">{detail.storage?.composite ?? detail.full_code}</span>
+            {toolUrl && <CopyUrlButton url={`${toolUrl}/?plant=${detail.id}`} />}
+            <button
+              onClick={() => setShowQr((v) => !v)}
+              className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100"
+            >
+              {showQr ? 'Verberg QR' : 'Toon QR'}
+            </button>
+          </div>
+
+          {showQr && (
+            <QrLabel
+              value={
+                toolUrl
+                  ? `${toolUrl}/?plant=${detail.id}`
+                  : (detail.storage?.composite ?? detail.full_code!)
+              }
+              caption={detail.storage?.composite ?? detail.full_code!}
+            />
+          )}
+
+          {!toolUrl && (
+            <p className="text-xs text-stone-400">
+              Stel het adres van de tool in (Instellingen) voor een werkende URL/QR.
             </p>
           )}
         </section>
@@ -510,6 +524,28 @@ function NicknameEditor({
         Annuleren
       </button>
     </div>
+  )
+}
+
+function CopyUrlButton({ url }: { url: string }) {
+  const [done, setDone] = useState(false)
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setDone(true)
+      setTimeout(() => setDone(false), 1500)
+    } catch {
+      // clipboard needs https; fall back to a prompt so it can be copied manually
+      window.prompt('Kopieer de URL', url)
+    }
+  }
+  return (
+    <button
+      onClick={copy}
+      className="rounded-lg border border-emerald-600 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+    >
+      {done ? 'Gekopieerd!' : 'Kopieer URL'}
+    </button>
   )
 }
 
