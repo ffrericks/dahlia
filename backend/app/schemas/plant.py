@@ -2,7 +2,7 @@ import re
 
 from pydantic import BaseModel, field_validator, model_validator
 
-ORIGINS = {"split", "seedling", "purchased", "gifted", "unknown"}
+ORIGINS = {"split", "cutting", "seedling", "purchased", "gifted", "unknown"}
 STATES = {"stored", "planted", "discarded", "given_away", "survived_winter"}
 _CODE_RE = re.compile(r"^[A-Za-z]{3}$")
 
@@ -61,8 +61,10 @@ class PlantCreate(BaseModel):
 
     @model_validator(mode="after")
     def check_combination(self):
-        if self.origin in ("split", "seedling") and self.parent_plant_id is None:
-            raise ValueError("Een afsplitsing of zaailing heeft een moederplant nodig.")
+        if self.origin in ("split", "cutting", "seedling") and self.parent_plant_id is None:
+            raise ValueError(
+                "Een afsplitsing, stek of zaailing heeft een moederplant nodig."
+            )
         if self.origin == "seedling" and self.new_variety_code is None:
             raise ValueError(
                 "Een zaailing wordt een nieuwe soort en heeft een code nodig."

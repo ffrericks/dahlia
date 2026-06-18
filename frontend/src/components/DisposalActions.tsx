@@ -1,16 +1,17 @@
 import { useState } from 'react'
-import type { PlantDetail } from '../api/plants'
-import { disposePlant, markNotEmerged } from '../api/plants'
+import type { Origin, PlantDetail } from '../api/plants'
+import { createPlant, disposePlant, markNotEmerged } from '../api/plants'
 import { todayISO } from '../dates'
 
 interface Props {
   detail: PlantDetail
   onChanged: () => void
+  onBack: () => void
 }
 
 type Mode = null | 'discard' | 'giveaway'
 
-export default function DisposalActions({ detail, onChanged }: Props) {
+export default function DisposalActions({ detail, onChanged, onBack }: Props) {
   const [mode, setMode] = useState<Mode>(null)
   const [reason, setReason] = useState('')
   const [disease, setDisease] = useState(false)
@@ -24,6 +25,21 @@ export default function DisposalActions({ detail, onChanged }: Props) {
       await action()
       setMode(null)
       onChanged()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  // Split or take a cutting: create a direct descendant, then go back to the overview
+  // where it shows up with a "nieuw" badge.
+  async function propagate(origin: Origin) {
+    setError(null)
+    try {
+      const child = await createPlant({ origin, parent_plant_id: detail.id })
+      const what = origin === 'cutting' ? 'Stek' : 'Afsplitsing'
+      onChanged()
+      onBack()
+      window.alert(`${what} ${child.full_code ?? ''} aangemaakt. Hij staat met "nieuw" in de lijst.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -52,28 +68,47 @@ export default function DisposalActions({ detail, onChanged }: Props) {
 
   return (
     <section className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">Afvoeren</h3>
+      <h3 className="text-sm font-medium uppercase tracking-wide text-stone-400">Acties</h3>
 
       {mode === null && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setMode('discard')}
-            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
-            Weggooien
-          </button>
-          <button
-            onClick={() => setMode('giveaway')}
-            className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
-          >
-            Weggeven
-          </button>
-          <button
-            onClick={() => run(() => markNotEmerged(detail.id))}
-            className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
-          >
-            Niet opgekomen
-          </button>
+        <div className="flex flex-col gap-2">
+          {/* Propagate: a split or cutting becomes a direct descendant. */}
+          {detail.variety_id !== null && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => propagate('split')}
+                className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+              >
+                Splitsen
+              </button>
+              <button
+                onClick={() => propagate('cutting')}
+                className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+              >
+                Stekken
+              </button>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setMode('discard')}
+              className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              Weggooien
+            </button>
+            <button
+              onClick={() => setMode('giveaway')}
+              className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
+            >
+              Weggeven
+            </button>
+            <button
+              onClick={() => run(() => markNotEmerged(detail.id))}
+              className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
+            >
+              Niet opgekomen
+            </button>
+          </div>
         </div>
       )}
 

@@ -4,6 +4,7 @@ export const ORIGIN_LABELS: Record<Origin, string> = {
   purchased: 'Gekocht',
   gifted: 'Gekregen',
   split: 'Afsplitsing',
+  cutting: 'Stek',
   seedling: 'Zaailing',
   unknown: 'Onbekend',
 }

@@ -95,11 +95,25 @@ def serialize_plant(session: Session, plant: Plant) -> dict:
         "location": location,
         "storage": _storage_info(session, plant, label),
         "last_fertilized": _iso(last_fertilized(session, plant.id)),
+        "is_new": _is_untouched(session, plant),
     }
 
 
 def _iso(value) -> str | None:
     return value.isoformat() if value else None
+
+
+def _is_untouched(session: Session, plant: Plant) -> bool:
+    """A freshly created plant nobody has done anything with yet (shows a 'nieuw' badge)."""
+    if plant.state != "stored" or plant.eye_status is not None or plant.storage_box_id:
+        return False
+    if session.exec(select(Planting.id).where(Planting.plant_id == plant.id)).first():
+        return False
+    if session.exec(select(LogEntry.id).where(LogEntry.plant_id == plant.id)).first():
+        return False
+    if session.exec(select(Photo.id).where(Photo.plant_id == plant.id)).first():
+        return False
+    return True
 
 
 def _storage_info(session: Session, plant: Plant, label: str) -> dict | None:

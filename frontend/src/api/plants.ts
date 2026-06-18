@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type Origin = 'purchased' | 'gifted' | 'split' | 'seedling' | 'unknown'
+export type Origin = 'purchased' | 'gifted' | 'split' | 'cutting' | 'seedling' | 'unknown'
 
 export interface PlantLocation {
   code: string
@@ -45,6 +45,7 @@ export interface Plant {
   location: PlantLocation | null
   storage: PlantStorage | null
   last_fertilized: string | null
+  is_new: boolean
 }
 
 export interface Photo {

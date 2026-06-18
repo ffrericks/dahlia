@@ -223,7 +223,14 @@ function PlantRow({ plant, onClick }: { plant: Plant; onClick: () => void }) {
           <span className="h-12 w-12 shrink-0 rounded-md bg-stone-100" />
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-mono font-medium">{plant.label}</p>
+          <p className="flex items-center gap-2 font-mono font-medium">
+            {plant.label}
+            {plant.is_new && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                nieuw
+              </span>
+            )}
+          </p>
           <p className="text-sm text-stone-500">
             {plant.variety_name ?? (plant.variety_id ? 'naamloos' : 'nog geen soort')} ·{' '}
             {ORIGIN_LABELS[plant.origin]}

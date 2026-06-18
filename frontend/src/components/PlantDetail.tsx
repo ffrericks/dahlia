@@ -450,7 +450,7 @@ export default function PlantDetail({ plantId, onBack, onNavigate, onChanged }: 
 
       <Logbook plantId={plantId} logs={detail.logs} onChanged={refreshAll} />
 
-      <DisposalActions detail={detail} onChanged={refreshAll} />
+      <DisposalActions detail={detail} onChanged={refreshAll} onBack={onBack} />
 
       <button
         onClick={removePlant}

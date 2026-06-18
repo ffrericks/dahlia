@@ -35,14 +35,15 @@ def create_plant(session: Session, data: PlantCreate) -> Plant:
         # Provisional plant: no variety/number yet, just a nickname.
         variety_id = ss = ddd = parent_id = None
 
-    elif data.origin == "split":
+    elif data.origin in ("split", "cutting"):
+        # A split or cutting is a clone: same variety, next number in the parent's stam.
         parent = session.get(Plant, data.parent_plant_id)
         if parent is None:
             raise ValueError("Moederplant niet gevonden.")
         if parent.variety_id is None:
             raise ValueError("De moederplant heeft nog geen soort; wijs die eerst toe.")
         variety_id = parent.variety_id
-        ss = parent.ss  # a split stays in the parent's stam
+        ss = parent.ss  # stays in the parent's stam
         ddd = next_ddd(session, variety_id, ss)
         parent_id = parent.id
 
