@@ -1,5 +1,31 @@
+from sqlmodel import Session, select
+
+from app.db import engine
+from app.models import Disposal, LogEntry, Planting
+
+
 def make_variety(client, code="WIT", name="Witte Dahlia"):
     return client.post("/api/varieties", json={"code": code, "name": name}).json()
+
+
+def test_delete_plant_removes_associated_rows(client):
+    variety = make_variety(client)
+    plant = client.post(
+        "/api/plants", json={"origin": "purchased", "variety_id": variety["id"]}
+    ).json()
+    pid = plant["id"]
+    client.post("/api/plantings", json={"plant_id": pid, "new_location_kind": "garden"})
+    client.post(f"/api/plants/{pid}/logs", json={"text": "test"})
+    client.post(f"/api/plants/{pid}/dispose", json={"kind": "discarded"})
+
+    assert client.delete(f"/api/plants/{pid}").status_code == 204
+    assert client.get(f"/api/plants/{pid}").status_code == 404
+
+    # No orphan rows left behind.
+    with Session(engine) as s:
+        assert s.exec(select(Planting).where(Planting.plant_id == pid)).all() == []
+        assert s.exec(select(LogEntry).where(LogEntry.plant_id == pid)).all() == []
+        assert s.exec(select(Disposal).where(Disposal.plant_id == pid)).all() == []
 
 
 def test_purchased_first_plant_is_01000(client):

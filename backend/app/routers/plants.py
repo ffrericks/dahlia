@@ -393,11 +393,25 @@ def delete_plant(plant_id: int, session: Session = Depends(get_session)) -> None
             detail="Deze plant heeft afstammelingen en kan niet verwijderd worden.",
         )
 
+    # Remove everything tied to this plant so no orphan rows remain.
     for photo in session.exec(select(Photo).where(Photo.plant_id == plant_id)).all():
         delete_files(photo.filename, photo.thumbnail)
         session.delete(photo)
+    for planting in session.exec(select(Planting).where(Planting.plant_id == plant_id)).all():
+        session.delete(planting)
+    for log in session.exec(select(LogEntry).where(LogEntry.plant_id == plant_id)).all():
+        session.delete(log)
+    for disposal in session.exec(select(Disposal).where(Disposal.plant_id == plant_id)).all():
+        session.delete(disposal)
+    box_id = plant.storage_box_id
     session.delete(plant)
     session.commit()
+    # Drop the storage box too if it's now empty.
+    if box_id is not None:
+        from ..services.storage import _delete_box_if_empty
+
+        _delete_box_if_empty(session, box_id)
+        session.commit()
 
 
 # --- photos ----------------------------------------------------------------
